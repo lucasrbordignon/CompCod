@@ -63,7 +63,7 @@ for each PedCod
 endfor
 
 for each PedCod
-  where PedCod = &PedCod
+    where PedCod = &PedCod
 
     &PedCreCod      = PedCreCod
     &PedAcr         = PedAcr
@@ -146,7 +146,7 @@ for each PedCod
             &SdtPdi.PdiCfopCod  = PdiCfopCod
             &SdtPdi.PdiObs      = PdiObs
             &SdtPdi.PdiOrdCompra= PdiOrdCompra
-//            &SdtPdi.PdiOrdCompraSeq = PdiOrdCompraSeq
+            &SdtPdi.PdiOrdCompraSeq = PdiOrdCompraSeq
             &SdtPdi.PdiCfopMovFin = PdiCfopMovFin
             &SdtPdi.PdiCfopMovStq = PdiCfopMovStq
             &SdtPdi.PdiNfEntrada = PdiNfEntrada
@@ -184,7 +184,7 @@ for each PedCod
     &PedCliTp = PedCliTp
 
     &PedCondCod = PedCondCod
-    //Do'CondPgtoIPI'
+    Do'CondPgtoIPI'
 
     &PedFormCod = PedFormPgt
     &PedVenCod = PedVenCod
@@ -304,9 +304,9 @@ for each PedCod
            Else
                 &SdtNfProItem.NfiOrdCompra = &PedOrdCompra
            EndIf
-    
-//          &SdtNfProItem.NfiOrdCompraSeq = &SdtPdi.PdiOrdCompraSeq
-           
+
+           &SdtNfProItem.NfiOrdCompraSeq = &SdtPdi.PdiOrdCompraSeq
+ 
            &PdiQtd = &SdtPdi.PdiQtd
            &PdiVlrUnt = &SdtPdi.PdiVlrUnt
     
@@ -362,7 +362,7 @@ for each PedCod
 
            &NfiVlrIpiDev = 0
     
-            if &PedTipTrnNOP = 3 or &PedTipTrnNOP = 4 // Calcula IPI devolvido se for Devolução de Venda ou Devolução de Compra ||&PedTipTrn = 2 or &PedTipTrn = 9
+            if &PedTipTrnNOP = 3 or &PedTipTrnNOP = 4 // Calcula IPI devolvido se for Devolução de Venda ou Devolução de  Compra        ||&PedTipTrn = 2 or &PedTipTrn = 9 
                 PCalcNfDev.Call(&Logon, &PedNumNfDev,&PedSerieNfDev,&PerDev,&PedTipTrnNOP,&PdiPrdCod,&PdiQtd,&NfiVlrIpiDev) 
                &SdtNfProItem.NfiPerDev = &PerDev
                &SdtNfProItem.NfiVlrIpiDev = &NfiVlrIpiDev
@@ -476,19 +476,19 @@ for each PedCod
            If &EmpTpMovStqCcr = 'C' // Só irá somar os produto no total das parcelas se a transação estiver marcada para movimentar contas a receber
                 If &SdtPdi.PdiCfopMovFin = 'S'
 
-                  If &CondRatIPI = 0
-                  	&NfsTotPar += &SdtNfProItem.NfiVlrTot
-                  Else
-                    &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
-                 	EndIf
+                    If &CondRatIPI = 0
+                        &NfsTotPar  += &SdtNfProItem.NfiVlrTot 
+                    Else
+                        &NfsTotPar  += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi  // Tira o Valor do IPI para depois colocar na primeira parcela
+                    EndIf
 
                 EndIf
            Else
-            	If &CondRatIPI = 0
-                &NfsTotPar += &SdtNfProItem.NfiVlrTot
-              Else
-                &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
-              EndIf
+                If &CondRatIPI = 0
+                    &NfsTotPar  += &SdtNfProItem.NfiVlrTot 
+                Else
+                    &NfsTotPar  += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi  // Tira o Valor do IPI para depois colocar na primeira parcela
+                EndIf
            EndIf                    
 
            &SdtNf.NfsBseClcIcms += &SdtNfProItem.NfiBseClcIcms
@@ -586,80 +586,171 @@ for each PedCod
              do 'parcelas'
           endif
 
+     
+          //Se For 'Cobrado 1º Parcela' 
+          If &CondRatIPI = 1
+        
+                //Colocar o valor do IPI na 1 Parcela
+                For &SdtNfParItem in &SdtNfPar
+                
+                   If &SdtNfParItem.NfpSeq = 1            
+                       &SdtNfParItem.NfpVlr += &SdtNf.NfsVlrIpi
+                       &NfsTotPar           += &SdtNf.NfsVlrIpi   // coloca na variavel o total do IPI que foi Retirado la em cima
+                       exit
+                   EndIf
+                
+                EndFor
+
+                /////////////////////////////////////////////
+                // FAZ A VERIFICAÇÃO DO TOTAL DAS PARCELAS //
+                /////////////////////////////////////////////
+              
+                &Total2 = 0
+                for &SdtNfParItem in &SdtNfPar
+                
+                    &Total2 += round(&SdtNfParItem.NfpVlr,2)
+                
+                endfor
+
+
+                
+                if &Total2 <> &NfsTotPar
+                    
+                       &dif = &NfsTotPar - &Total2
+                    
+                       for &SdtNfParItem in &SdtNfPar
+                    
+                           &SdtNfParItem.NfpVlr += &dif
+                           exit
+                    
+                       endfor
+                    
+                endif
+
+
+
+          EndIf
+
     endif
 
 endfor
 
-&Flag = 'N'
-call(WNotaFiscal,&Logon,&SdtNf,&SdtNfPar,&SdtNfPro,&Flag)
+do case
+  case &ModoImp = 'P1'
+     RRelPrePedConf.Call(&Logon, &SdtNf, &SdtNfPar, &SdtNfPro)
+  case &ModoImp = 'P2'
+     RRelPrePedCli.Call(&Logon, &SdtNf, &SdtNfPar, &SdtNfPro)
+  case &ModoImp = 'N'
 
-//&Flag = 'N'
-//for each
-//    where NfsNum = &EmpUltNfs
-//    where NfsSer = &serie
-//   
-//    &Flag = 'S'
-//
-//endfor
-
-if &Flag = 'S'
-
-    &cont = 0
-    &TotalParcelas = 0
-    for &SdtPdi in &ColSdtPdi
-        if &SdtPdi.Seq = 2
-           &cont += 1
-           &TotalParcelas += &SdtPdi.PdiTotVlr + &SdtPdi.PdiFrete + &SdtPdi.PdiAcr - &SdtPdi.PdiDesconto
-
-//           If &SdtPdi.PdiCfopMovFin = 'N' // CFOP do produto não movimenta contas a receber
-//               &TotalParcelas -= &SdtPdi.PdiTotVlr
-//           EndIf
-            
-        endif
-    endfor
-    
-    if &cont > 0
-    
+      &Flag = 'N'
+      call(WNotaFiscal,&Logon,&SdtNf,&SdtNfPar,&SdtNfPro,&Flag)
+      
+      //&Flag = 'N'
+      //for each
+      //    where NfsNum = &EmpUltNfs
+      //    where NfsSer = &serie
+      //   
+      //    &Flag = 'S'
+      //
+      //endfor
+      
+      
+      ///////////////////////////////////////////
+      //CALCUO DA DAS PARCELA DA PARTE SEM NOTA//
+      ///////////////////////////////////////////
+      
+      if &Flag = 'S'
+      
+          &cont = 0
+          &TotalParcelas = 0
+      
+      ///  CODIGO ANTIGO ////
           for &SdtPdi in &ColSdtPdi
               if &SdtPdi.Seq = 2
-
-                 &PdiPrdCod = &SdtPdi.PdiPrdCod
-                 &PdiQtd    = &SdtPdi.PdiQtd
-                 &PdiVlrUnt = &SdtPdi.PdiVlrUnt
-
-                 if (&PedMovStq = 1 or (&SdtPdi.PdiCfopMovStq = 'S' and &EmpTpMovStqCcr = 'C') ) and &CreTp = 'Q' // Controla Movimento de Estoque e Contas a Receber pelo Pedido ou CFOP
-
-                     &obs       = 'FATURAMENTO REFERENTE AO PEDIDO NUMERO '+Trim(str(&PedCod))
-                     
-                     if &SdtNf.NfsTpNf = 0
-                        &es = 'E'
-                     else
-                        &es = 'S'
-                     endif
-    
-                     PGravaStq2.Call(&Logon,&PdiPrdCod,&PdiQtd,&ES,&PdiVlrUnt,&obs,&PedCod,&MovSeq,'',0)
-
-                 endif
-
+                 &cont += 1
+      //           &TotalParcelas += &SdtPdi.PdiTotVlr + &SdtPdi.PdiFrete + &SdtPdi.PdiAcr - &SdtPdi.PdiDesconto
+      
+      //           If &SdtPdi.PdiCfopMovFin = 'N' // CFOP do produto não movimenta contas a receber
+      //               &TotalParcelas -= &SdtPdi.PdiTotVlr
+      //           EndIf
+                  
               endif
           endfor
-
-          if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &TotalParcelas > 0
-
-             if &EmpCalcParc = 1
-                   do 'buscaparc2'
-             else
-                   do 'parcelas2'
-             endif
-
-             WNFParc.Call(&Logon,&SdtNfPar,&TotalParcelas,&PedCod)
-
+      ///  CODIGO ANTIGO ////
+      
+      
+      
+      
+          
+          if &cont > 0
+      
+      
+              //NOVO        
+              // Soma o total das parcelas que poderá ser diferente do pedido quando a empresa controlar por CFOP e algumas CFOPs não gerarem contas a receber, daí o valor total desses produtos não soma no valor total das parcelas
+              &TotalParcelas = 0
+              For Each PedCod
+               Where PedCod = &PedCod
+                Defined by PedPrcVlr
+                      &TotalParcelas += PedPrcVlr
+              EndFor
+              
+              &NfsVlrTotPrd  = 0
+              For Each 
+               Where NfsNum = &SdtNf.NfsNum
+               Where NfsSer = &SdtNf.NfsSer
+                Defined by NfsVlrTotPrd
+              
+                    If  NfsNumPed = &PedCod
+                      &NfsVlrTotPrd = NfsVlrTotPrd
+                    EndIf
+              
+              EndFor
+              
+              //TIRA O VALOR DA MERCADORIA DA NOTA FISCAL 
+              &TotalParcelas = &TotalParcelas - &NfsVlrTotPrd        
+              //NOVO
+          
+                // MOVIMENTA ESTOQUE 
+                for &SdtPdi in &ColSdtPdi
+                    if &SdtPdi.Seq = 2
+      
+                       &PdiPrdCod = &SdtPdi.PdiPrdCod
+                       &PdiQtd    = &SdtPdi.PdiQtd
+                       &PdiVlrUnt = &SdtPdi.PdiVlrUnt
+      
+                       if (&PedMovStq = 1 or (&SdtPdi.PdiCfopMovStq = 'S' and &EmpTpMovStqCcr = 'C') ) and &CreTp = 'Q' // Controla Movimento de Estoque e Contas a Receber pelo Pedido ou CFOP
+      
+                           &obs       = 'FATURAMENTO REFERENTE AO PEDIDO NUMERO '+Trim(str(&PedCod))
+                           
+                           if &SdtNf.NfsTpNf = 0
+                              &es = 'E'
+                           else
+                              &es = 'S'
+                           endif
+          
+                           PGravaStq2.Call(&Logon,&PdiPrdCod,&PdiQtd,&ES,&PdiVlrUnt,&obs,&PedCod,&MovSeq,'',0)
+      
+                       endif
+      
+                    endif
+                endfor
+      
+                if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &TotalParcelas > 0
+      
+                   if &EmpCalcParc = 1
+                         do 'buscaparc2'
+                   else
+                         do 'parcelas2'
+                   endif
+      
+                   WNFParc.Call(&Logon,&SdtNfPar,&TotalParcelas,&PedCod)
+      
+                endif
+          
           endif
-    
-    endif
-
-endif
-
+      
+      endif
+endcase
 
 sub'obs'
 
@@ -2226,8 +2317,8 @@ Sub'CalcPisCof'
             &SdtNfProItem.NfiBseClcPIS -= &NfiVlrIcms
         endif
 
-        &SdtNfProItem.NfiBseClcPIS = &SdtNfProItem.NfiBseClcPIS * &CfopBsePis / 100 // Alteração dia 27/03/2019: Acrescentado base de cálculo do pis para permitir reduzir a base de cálculo quando necessário
-        &SdtNfProItem.NfiVlrPis = &SdtNfProItem.NfiBseClcPIS * &NcmPerPis / 100        
+        &SdtNfProItem.NfiBseClcPIS = Round(&SdtNfProItem.NfiBseClcPIS * &CfopBsePis / 100 ,2) // Alteração dia 27/03/2019: Acrescentado base de cálculo do pis para permitir reduzir a base de cálculo quando necessário
+        &SdtNfProItem.NfiVlrPis = Round(&SdtNfProItem.NfiBseClcPIS * &NcmPerPis / 100 ,2)       
     else
        &SdtNfProItem.NfiBseClcPIS = 0
        &SdtNfProItem.NfiVlrPis = 0
@@ -2247,8 +2338,8 @@ Sub'CalcPisCof'
             &SdtNfProItem.NfiBseClcCOFINS -= &NfiVlrIcms
         endif
 
-        &SdtNfProItem.NfiBseClcCOFINS = &SdtNfProItem.NfiBseClcCOFINS * &CfopBseCofins / 100 // Alteração dia 27/03/2019: Acrescentado base de cálculo do cofins para permitir reduzir a base de cálculo quando necessário
-        &SdtNfProItem.NfiVlrCof = &SdtNfProItem.NfiBseClcCOFINS * &NcmPerCof / 100
+        &SdtNfProItem.NfiBseClcCOFINS = Round(&SdtNfProItem.NfiBseClcCOFINS * &CfopBseCofins / 100,2) // Alteração dia 27/03/2019: Acrescentado base de cálculo do cofins para permitir reduzir a base de cálculo quando necessário
+        &SdtNfProItem.NfiVlrCof = Round(&SdtNfProItem.NfiBseClcCOFINS * &NcmPerCof / 100,2)
     else
        &SdtNfProItem.NfiBseClcCOFINS = 0
        &SdtNfProItem.NfiVlrCof = 0
@@ -3408,7 +3499,7 @@ sub 'DividePed'
 
             else
 
-                   &Valor = round(PdiVlrUnt * &CreVlr / 100,3)
+                   &Valor = round(PdiVlrUnt * &CreVlr / 100,2)      //PUFTOYS
                    &Valor2 = PdiVlrUnt - &Valor
                    &PdiDsc = 0
 
@@ -3560,4 +3651,18 @@ Sub 'UltNfCompra'
 
             Exit
     EndFor
+EndSub
+
+
+Sub'CondPgtoIpi'
+
+&CondRatIPI = NullValue(&CondRatIPI)
+
+For Each
+ Where CondCod = &PedCondCod
+
+   &CondRatIPI = CondRatIPI
+
+EndFor
+
 EndSub
