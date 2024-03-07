@@ -1,1146 +1,1372 @@
-Event Start
+event start
 
     Form.Caption = Form.Caption + ' - (' + Trim(&Pgmname) + ')'
 
+   // btnalt.TooltipText = 'Alterar Registro' // Retirado dia 29/12/2017 pois a parte fiscal foi refeita, agora pode-se alterar a CFOP diretamente no pedido caso necessário.
+   btndsp.TooltipText = 'Visualizar o Registro'
 
-btnalt.TooltipText = 'Alterar Nota Fiscal'
-BtnExc.TooltipText = 'Excluir Nota Fiscal'
-BtnDsp.TooltipText = 'Visualizar Nota Fiscal'
-BtnExit.TooltipText = 'Sair'
-BtnImp.TooltipText = 'Imprimir Relação de Notas Fiscais'
-btnexcel.TooltipText = 'Gerar Relação de Notas Fiscais .XLS'
-btncanc.TooltipText = 'Cancelar Nota Fiscal'
-BtnNfe.TooltipText = 'Gerar arquivo da NF-e'
-BtnDanfe.TooltipText = 'Pré Visualizar Danfe'
+   &empcod = &SdtNf.NfsEmpCod
+   &PedCod = &SdtNf.NfsNumPed
 
-SETINHA.TooltipText  = 'Configurações'
+   &nfsvlricms = &SdtNf.NfsVlrIcms
+   &NfsVlrSt   = &SdtNf.NfsVlrSt
+   &NfsVlrDsc  = &SdtNf.NfsVlrDsc
+   &NfsBseClcIcms = &SdtNf.NfsBseClcIcms
 
-for each
-   where UsrCod = &Logon.UsrCod
-   where UsrPerSeq = 1
+   &NfsBseClcSt = &SdtNf.NfsBseClcSt
+   &NfsVlrFrt = &SdtNf.NfsVlrFrt
+   &NfsVlrTotPrd = &SdtNf.NfsVlrTotPrd
+   &NfsVlrIpi = &SdtNf.NfsVlrIpi
+   &NfsVlrTotNf = &SdtNf.NfsVlrTotNf
+   &NfsVlrPis   = &SdtNf.nfsvlrpis
+   &NfsVlrCofins = &SdtNf.NfsVlrCofins
+   &NfsCliCod = &SdtNf.NfsCliCod
+//   If &Logon.EmpClienteNa12 = 6  //CANCIAN
+//       &NfsEsp = 'CAIXA'
+//       &NfsQtd =  &SdtNf.PedQtdeCaixa       
+//   else
+       &NfsQtd    = &SdtNf.NfsQtd
+ //  endif
+   &NfsInfCmp = &SdtNf.NfsInfCmp
+   &NfsPesoBruto = &SdtNf.NfsPesoBruto
+   &NfsPesoLiquido = &SdtNf.NfsPesoliquido
+   &NfsOutDsp = &SdtNf.NfsOutDsp
+   &NfsVlrDsc = &SdtNf.NfsVlrDsc
+   &CpgPla1Cod = &SdtNf.NfsPla1Cod
+   &CpgPla2Cod = &SdtNf.NfsPla2Cod
+   &CpgPla3Cod = &SdtNf.NfsPla3Cod
+   &CpgPla4Cod = &SdtNf.NfsPla4Cod
+   &CpgPla5Cod = &SdtNf.NfsPla5Cod
+   &NfsVlrIcmsDest = &SdtNf.NfsVlrIcmsDest
+   &NfsVlrIcmsOri = &SdtNf.NfsVlrIcmsOri
+   &NfsVlrFCP = &SdtNf.NfsVlrFCP
+   &NfsDesIcms = &SdtNf.NfsDesIcms
+   &NfsVlrIPIDev = &SdtNf.NfsVlrIPIDev
+   &NfsVlrFCPSub = &SdtNf.NfsVlrFCPSub
+   &NfsTpTrn = &SdtNf.NfsTpTrn
+   &NfsTipTrnNOP = &SdtNf.NfsTipTrnNOP
 
-   &UsrPerVenNf = UsrPerVenNf
-   &UsrPerVenNfUpd = UsrPerVenNfUpd
-   &UsrPerVenNfDsp = UsrPerVenNfDsp
-   &UsrPerVenNfDlt = UsrPerVenNfDlt
-   &UsrPerVenNfTot = UsrPerVenNfTot
+   for each
+    where Pla1Cod = &CpgPla1Cod
+    where Pla2Cod = &CpgPla2Cod
+    where Pla3Cod = &CpgPla3Cod
+    where Pla4Cod = &CpgPla4Cod
+    Where Pla5Cod = &CpgPla5cOD
 
-endfor
+    &Pla5CodDesc = Pla5CodDesc
+    &CpgPla4Dsc = Pla5Dsc
 
-if &UsrPerVenNf = 'N'
-   Msg('Usuário não possui permissão de acesso a esta operação')
-   return
-endif
+   endfor
 
+   for each
+       where TrpAtv = 1
 
-if  &UsrPerVenNfUpd = 'N' and &UsrPerVenNfDlt = 'N' and &UsrPerVenNfDsp = 'S' 
-   btnnfe.Enabled = 0
-   btncanc.Enabled = 0
-endif
+       &NfsTrpCod.Additem(TrpCod,TrpNom)
 
-if &UsrPerVenNfDsp = 'N'
-   BtnDsp.Enabled = 0
-endif
+   endfor
 
-if &UsrPerVenNfDlt = 'N'
-   BtnExc.Enabled = 0
-endif
+   &NfsUfEmb.Additem('','')
+   &NfsUfEmb = ''
 
-&NfsSts = ''
-&NfsTpTrn = 0
+   for each
+      where EmpCod = &empcod
 
+      &EmpNom = EmpNom
+      &Bit  = loadbitmap(EmpLogoNome)
+      &EmpTpEndSeq = EmpTpEndSeq
+      do'tipo'
+      &End1  = &TpEndDsc+space(1)+trim(EmpEnd)+','+trim(EmpEndNum)+'-'+trim(EmpEndBai)
+      &end2  = trim(EmpCidade)+','+trim(EmpUf)+'- CEP:'+TRIM(EmpCep)
+      &End3 = 'Fone/Fax:'+trim(EmpFone)
+      &EmpIe = EmpIE
 
- //atribui configurações iniciais
-    Call(PConfigNfs, &logon,&CnfNfsBold,&CnfNfsCidNom ,&CnfNfsCli ,&CnfNfsCorFonte ,&CnfNfsCorLinha ,&CnfNfsDtaEms ,&CnfNfsFont, &CnfNfsForNom, &CnfNfsItalic ,&CnfNfsNum ,&CnfNfsSeq ,&CnfNfsSer ,&CnfNfsTotNf ,&CnfNfsTotPrd ,&CnfNfsTpTrn ,&CnfNfsUfCod ,&CnfNfsUnderline ,&CnfNfsUsr ,&CnfNfsVenNom,&CnfNfsNumPed,&CnfNfsSts,&CnfNfsBseIcms,&CnfNfsVlrIcms,&CnfNfsBseSt,&CnfNfsVlrSt,&CnfNfsFrete,&CnfNfsOutDsp,&CnfNfsDsc,&CnfNfsBseClcIpi,&CnfNfsVlrIpi)
-    do'Config'
-
-if &UsrPerVenNfTot = 'N'
-   LBLTOT.Visible       = 0
-   &TotaPed.Visible     = 0
-   NfsVlrTotNf.Visible  = 0
-   NfsVlrTotPrd.Visible = 0
-endif
-
-if &UsrPerVenNfTot = 'S'
-   LBLTOT.Visible       = 1
-   &TotaPed.Visible     = 1
-   NfsVlrTotNf.Visible  = 1
-   NfsVlrTotPrd.Visible = 1
-endif
-
-&UfCod.Additem('','')
-&UfCod = ''
-   
-
-for each
-   where EmpCod = &Logon.EmpCod
-
-   &EmpLogoNome = EmpLogoNome
-   &EmpNomFan = EmpNomFan
-
-   &EmpCnpj = EmpCnpj
-   &EmpNom = EmpNom
-   &EmpFone = EmpFone
-
-   if EmpIEise = 'S'
-
+      if EmpIEise = 'S'
          &EmpIe = 'ISENTO'
+      endif
 
+      &EmpCnpj = EmpCnpj
+      &EmpUf = EmpUf
+      &EmpUsaConvenio = EmpUsaConvenio
+      &EmpCRT = EmpCRT
+
+   endfor
+
+   for each
+      where UfCod = &EmpUf
+
+      &UfInscSub = UfInscSub
+
+   endfor
+
+   &nota2 = &SdtNf.NfsNum.ToString()
+   &nota2 = padl(trim(&nota2),11,'0')
+
+   &NfsSer = Padl(trim(&SdtNf.NfsSer),3,'0')
+   &NfsTpNf = &SdtNf.NfsTpNf
+   &NfsDtaEms = &SdtNf.NfsDtaEms
+   &NfsDtaSai = &SdtNf.NfsDtaSai
+   &NfsHraSai = &SdtNf.NfsHraSai
+   &NfsCubagem = &SdtNf.NfsCubagem
+   &NfsTrpCod = &SdtNf.NfsTrpCod
+   
+
+   for each
+     where VenCod = &SdtNf.NfsVenCod
+
+     &VenNom = VenNom
+
+   endfor
+
+   for each
+      where CliCod = &SdtNf.NfsCliCod
+
+      &NfsCliNom = CliNom
+      &NfsCliTp  = CliTp
+
+      if CliTp = 'J'
+         &NfsCliCpf.Visible  = 0
+         &NfsCliCnpj.Visible = 1
+         &NfsCliCnpj = CliCnpj
+      else
+         &NfsCliCpf.Visible  = 1
+         &NfsCliCnpj.Visible = 0
+         &NfsCliCpf = CliCpf
+      endif
+
+      &NfsCliEnd = CliEnd
+      &NfsCliBai = CliEndBai
+      &NfsCliCep = CliCep
+      &NfsCliCidNom = CliCidNom
+      &NfsCliFone = CliFone
+      &NfsCliEstado = CliUfCod
+      &NfsCliIes = CliIes
+      &CliConvCod = CliConvCod
+
+  endfor
+
+  if &EmpUsaConvenio = 1
+  
+       for each
+           where ConvCod = &CliConvCod
+    
+            &ConvDiaFec = ConvDiaFec
+    
+       endfor
+    
+  else
+       &ConvDiaFec = 0
+  endif
+
+
+  &NfsTpFrt = &SdtNf.NfsTpFrt
+
+
+  do case 
+     case trim(&NfsCliEstado) = trim(&EmpUf) and &NfsTpNf = 1
+     &char = '5'
+     case trim(&NfsCliEstado) <> trim(&EmpUf) and trim(&NfsCliEstado) <> 'EX' and &NfsTpNf = 1
+     &char = '6'
+     case trim(&NfsCliEstado) = 'EX' and &NfsTpNf = 1
+     &char = '7'
+     case trim(&NfsCliEstado) = 'EX' and &NfsTpNf = 0
+     &char = '3'
+     case trim(&NfsCliEstado) = trim(&EmpUf) and &NfsTpNf = 0
+     &char = '1'
+     case trim(&NfsCliEstado) <> trim(&EmpUf) and trim(&NfsCliEstado) <> 'EX' and &NfsTpNf = 0
+     &char = '2'
+  endcase
+
+  &NfsDescCfop = &SdtNf.NfsDescCfop
+
+
+  for &SdtNfProItem in &SdtNfPro
+    
+      &NfsCfopSeq = &SdtNfProItem.NfiCfopSeq
+      exit  
+
+  endfor
+
+   if &NfsTpFrt = 9
+       &NfsTrpCod.Enabled = 0
+       &NfsAntt.Enabled = 0
+       &NfsPlcVei.Enabled = 0
+       &NfsVeiUf.Enabled = 0
+       &NfsForCpf = ''
+       &NfsForCnpj = ''
+       &NfsForEnd = ''
+       &NfsForCidNom = ''
+       &NfsForEstado = ''
+       &NfsForIes = ''
+       &NfsTrpCod = 0
+       &NfsAntt = ''
+       &NfsPlcVei = ''
+       &NfsVeiUf = ''
    else
+       if not null(&NfsTrpCod)
 
-         &EmpIe = EmpIE
+           for each
+              where TrpCod = &NfsTrpCod
+            
+              if TrpTp = 'J'
+                &NfsForCnpj = TrpCnpj
+                &NfsForCpf = ''
+                &NfsForCnpj.Visible = 1
+                &NfsForCpf.Visible = 0
+              else
+                &NfsForCpf = TrpCpf
+                &NfsForCnpj = ''
+                &NfsForCnpj.Visible = 0
+                &NfsForCpf.Visible = 1
+              endif
+            
+              &NfsForEnd = TrpEnd.Trim()+','+TrpEndNum.Trim()
+              &NfsForCidNom = TrpCidNom
+              &NfsForEstado = TrpUFCod
+              &NfsForIes = TrpIe
+              &NfsPlcVei = TrpPlaca
+              &NfsAntt = TrpAntt
+              &NfsVeiUf = TrpPlacaUF
+              when none
+            
+              &NfsForCpf = ''
+              &NfsForCnpj = ''
+              &NfsForEnd = ''
+              &NfsForCidNom = ''
+              &NfsForEstado = ''
+              &NfsForIes = ''
+              &NfsTrpCod = 0
+            
+            endfor
 
+         endif
    endif
 
-   &EmpTpEndSeq = EmpTpEndSeq
-   &EmpCnpj = EmpCnpj
-   &EmpVerLei = EmpVerLei
-   &EmpProcEmi = EmpProcEmi
-   &EmpDirTxtNfe = EmpDirTxtNfe
-   do'tipo'
+   if &EmpCrt = '3'
+      &NfiCst.Title = 'CST'
+   else
+      &NfiCst.Title = 'CSOSN'
+   endif
 
-   &End = upper(&TipoEnd.Trim())+space(1)+EmpEnd.Trim()+' - '+EmpEndComp.Trim()+','+EmpEndNum.Trim()+' - '+EmpEndBai.Trim()
-   &End2 = EmpCep.Trim()+' - '+EmpCidade.Trim()+' - '+EmpUf.Trim()
+    If &NfsTipTrnNOP = 16  // Crédito
+        BtnAlterarProduto.Visible = 1
+    Else
+        BtnAlterarProduto.Visible = 0
+    EndIf
+
+   &NfsTipoNfRef = 1 // NF-e
+   Do 'ConfGridRef'
+
+   &NfsEsp = 'UNIDADES'
+
+   If &Logon.EmpClienteNa12 = 14 and &NfsTipTrnNOP = 15 and Null(&NfsQtd) // Anima Toys - Nota de Doação - Quantidade de volume zerada
+       &NfsEsp = 'CAIXA'
+       &NfsQtd = 1       
+   EndIf
+   If &Logon.EmpClienteNa12 = 6  //CANCIAN
+       &NfsEsp = 'CAIXA'
+       &NfsQtd =  &SdtNf.PedQtdeCaixa    
+       &NfsPesoBruto = &SdtNf.PedQtdeKIlos
+       //&NfsPesoLiquido = &SdtNf.PedQtdeKIlos
+//   else
+//       &NfsQtd    = &SdtNf.NfsQtd
+   endif
+
+    If &Logon.EmpClienteNa12 = 11 or &Logon.EmpClienteNa12 = 18 //PlasBrink | PuffToys
+       &NfsEsp = 'CAIXAS'          
+    endif
+   
+endevent
+
+event &NfsTpFrt.Click
+
+if &NfsTpFrt <> 9
+   &NfsTrpCod.Enabled = 1
+   &NfsAntt.Enabled = 1
+   &NfsPlcVei.Enabled = 1
+   &NfsVeiUf.Enabled = 1
+else
+   &NfsTrpCod.Enabled = 0
+   &NfsAntt.Enabled = 0
+   &NfsPlcVei.Enabled = 0
+   &NfsVeiUf.Enabled = 0
+   &NfsForCpf = ''
+   &NfsForCnpj = ''
+   &NfsForEnd = ''
+   &NfsForCidNom = ''
+   &NfsForEstado = ''
+   &NfsForIes = ''
+   &NfsTrpCod = 0
+   &NfsAntt = ''
+   &NfsPlcVei = ''
+   &NfsVeiUf = ''
+endif
+
+endevent
+
+event &NfsTrpCod.Click
+
+for each
+  where TrpCod = &NfsTrpCod
+
+  if TrpTp = 'J'
+    &NfsForCnpj = TrpCnpj
+    &NfsForCpf = ''
+    &NfsForCnpj.Visible = 1
+    &NfsForCpf.Visible = 0
+  else
+    &NfsForCpf = TrpCpf
+    &NfsForCnpj = ''
+    &NfsForCnpj.Visible = 0
+    &NfsForCpf.Visible = 1
+  endif
+
+  &NfsForEnd = TrpEnd.Trim()+','+TrpEndNum.Trim()
+  &NfsForCidNom = TrpCidNom
+  &NfsForEstado = TrpUFCod
+  &NfsForIes = TrpIe
+  &NfsPlcVei = TrpPlaca
+  &NfsAntt = TrpAntt
+  &NfsVeiUf = TrpPlacaUF
+  when none
+
+  &NfsForCpf = ''
+  &NfsForCnpj = ''
+  &NfsForEnd = ''
+  &NfsForCidNom = ''
+  &NfsForEstado = ''
+  &NfsForIes = ''
+  &NfsTrpCod = 0
+  &NfsPlcVei = ''
+  &NfsAntt = ''
+  &NfsVeiUf = ''
 
 endfor
 
-    &PedDta = &Today
-    &PedDta2 = &Today
 endevent
 
 
-Event 'Alt'
-    if not null(NfsNum)
-        if NfsSts = 'N'
-            call(WNotaFiscal2,&Logon,NfsNum,NfsSer)
-            refresh
-        else
-            msg('Nota Fiscal não pode ser alterada pois sua situação não permite!')
-        endif
-    endif
-EndEvent  // 'Alt'
+// Retirado dia 29/12/2017 pois a parte fiscal foi refeita, agora pode-se alterar a CFOP diretamente no pedido caso necessário.
+//Event 'altpro'
+//call(WNotaItem,&NfiPrdCod,&SdtNfPro,&NfsCliCod,&EmpUf,&NfsTpNf,&SdtNf)
+//
+//
+//   &nfsvlricms = &SdtNf.NfsVlrIcms
+//   &NfsVlrSt   = &SdtNf.NfsVlrSt
+//   &NfsVlrDsc  = &SdtNf.NfsVlrDsc
+//   &NfsBseClcIcms = &SdtNf.NfsBseClcIcms
+//   &NfsBseClcSt = &SdtNf.NfsBseClcSt
+//   &NfsVlrFrt = &SdtNf.NfsVlrFrt
+//   &NfsVlrTotPrd = &SdtNf.NfsVlrTotPrd
+//   &NfsVlrIpi = &SdtNf.NfsVlrIpi
+//   &NfsVlrTotNf = &SdtNf.NfsVlrTotNf
+//   &NfsVlrPis   = &SdtNf.nfsvlrpis
+//   &NfsVlrCofins = &SdtNf.NfsVlrCofins
+//   &NfsOutDsp = &SdtNf.NfsOutDsp
+//   &NfsVlrDsc = &SdtNf.NfsVlrDsc
+//   &NfsDesIcms = &SdtNf.NfsDesIcms
+//
+////
+////&NfsBseClcIcms = 0
+////&nfsvlricms = 0
+////&NfsBseClcSt = 0
+////&NfsVlrSt = 0
+////&NfsVlrFrt = 0
+////&NfsVlrTotPrd = 0
+////&NfsVlrDsc = 0
+////&NfsVlrPis = 0
+////&NfsVlrCofins = 0
+////&NfsVlrIpi = 0
+////&NfsVlrTotNf = 0
+////
+////for &SdtNfProItem in &SdtNfPro
+////
+////    &NfsBseClcIcms += &SdtNfProItem.NfiBseClcIcms
+////    &nfsvlricms += &SdtNfProItem.NfiVlrIcms
+////    &NfsBseClcSt += &SdtNfProItem.NfiBseClcSt
+////    &NfsVlrSt += &SdtNfProItem.NfiVlrSt
+////    &NfsVlrFrt += &SdtNfProItem.NfiVlrFrete
+////    &NfsVlrTotPrd += &SdtNfProItem.NfiTotPrd
+////    &NfsVlrDsc += &SdtNfProItem.NfiVlrDsc
+////    &NfsVlrPis += &SdtNfProItem.NfiVlrPis
+////    &NfsVlrCofins += &SdtNfProItem.NfiVlrCof
+////    &NfsVlrIpi += &SdtNfProItem.NfiVlrIpi
+////    &NfsVlrTotNf += &SdtNfProItem.NfiVlrTot
+////
+////endfor
+//   
+//
+//if &SdtNf.MovCcr = 1
+//   do'acertaparc'
+//endif
+//
+////&TotalParc = 0
+////&NfpSeq = 0
+////for &SdtNfParItem in &SdtNfPar
+////
+////   &NfpSeq += 1
+////   &NfpVct = &SdtNfParItem.NfpVct
+////   &NfpNumDoc = &SdtNfParItem.NfpNumDoc
+////   &NfpVlr = &SdtNfParItem.NfpVlr
+////
+////   &TotalParc += &NfpVlr
+////
+////   GrdPar.Load()
+////
+////endfor
+//
+//&TotalParc = 0
+//grdpar.Refresh()
+//grdprd.Refresh()
+////refresh
+//
+//
+//EndEvent  // 'altpro'
+
+Event 'vispro'
+    call(WNotaItemDsp,&NfiSeq, &NfiPrdCod,&SdtNfPro, 'DSP')
+EndEvent  // 'vispro'
 
 
-Event 'Exc'
+Event 'AlterarProduto'
+    call(WNotaItemDsp,&NfiSeq, &NfiPrdCod,&SdtNfPro, 'UPD')
 
-if not null(NfsNum)
-    &Mensagem = 'Deseja realmente EXCLUIR a nota fiscal nº. ' + trim(str(NfsNum)) + ' ?'
-   Confirm(&Mensagem, N)
+    &NfsBseClcIcms = 0
+    &nfsvlricms = 0
+    &NfsBseClcSt = 0
+    &NfsVlrSt = 0
+    &NfsVlrFrt = 0
+    &NfsVlrTotPrd = 0
+    &NfsVlrDsc = 0
+    &NfsVlrPis = 0
+    &NfsVlrCofins = 0
+    &NfsVlrIpi = 0
+    &NfsVlrTotNf = 0
 
-   if confirmed()
-     Call(PVerStsNF, &Logon, NfsNum, NfsSer, &NfsSts2)
+    for &SdtNfProItem in &SdtNfPro
 
-     if &NfsSts2 = 'N'
-        Call(PExcluirNF,&Logon,NfsNum,NfsSer,NfsNumPed)
-        refresh
-     else
-        msg('Nota Fiscal não pode ser cancelada pois sua situação não permite')
-     endif
-
-   endif
-
-endif
-
-EndEvent  // 'Exc'
-
-
-
-Event 'Imp'
-    &SdtNota.Clear()
-    for each line
-      &SdtNotaItem = new SdtNota.SdtNotaItem()
-      &SdtNotaItem.NfsNum = NfsNum
-      &SdtNotaItem.NfsSer = NfsSer
-      &SdtNota.Add(&SdtNotaItem)
+        &NfsBseClcIcms += &SdtNfProItem.NfiBseClcIcms
+        &nfsvlricms += &SdtNfProItem.NfiVlrIcms
+        &NfsBseClcSt += &SdtNfProItem.NfiBseClcSt
+        &NfsVlrSt += &SdtNfProItem.NfiVlrSt
+        &NfsVlrFrt += &SdtNfProItem.NfiVlrFrete
+        &NfsVlrTotPrd += &SdtNfProItem.NfiTotPrd * &SdtNfProItem.NfiIndTot // // Quando o campo NfiIndTot for = 0 (Item não compõe o total da nota), não deve somar o valor do produto no total da nota e dos produtos
+        &NfsVlrDsc += &SdtNfProItem.NfiVlrDsc
+        &NfsVlrPis += &SdtNfProItem.NfiVlrPis
+        &NfsVlrCofins += &SdtNfProItem.NfiVlrCof
+        &NfsVlrIpi += &SdtNfProItem.NfiVlrIpi
+        &NfsVlrTotNf += &SdtNfProItem.NfiVlrTot
+        
     endfor
+EndEvent  // 'AlterarProduto'
+
+//event refresh
+//&TotalParc = 0
+//&NfpSeq = 0
+//msg('refresh',status)
+//endevent
+
+event GrdPar.Load
+    &TotalParc = 0   
+    &NfpSeq = 0
     
-    if &SdtNota.Count > 0
-       call(RRelNf,&Logon,&SdtNota)
-    endif
-EndEvent  // 'Imp'
-
-event load
-
-&TotaPed += NfsVlrTotNf
-
-endevent 
-
-event refresh
-    &Esc = 'N'
-    &TotaPed = 0
-    Call(PCommit) 
-    Call(PImpRetEmissor, &Logon) // Importa os retornos do emissor e atualiza o status das notas fiscais
-endevent
-
-
-event &sel.Click
-    for each line
-        &Esc = &sel
+    for &SdtNfParItem in &SdtNfPar
+    
+       &NfpSeq += 1
+       &NfpVct = &SdtNfParItem.NfpVct
+       &NfpNumDoc = &SdtNfParItem.NfpNumDoc
+       &NfpVlr = &SdtNfParItem.NfpVlr
+       &NfpVlr2 = &SdtNfParItem.NfpVlr2
+       &obs     = &SdtNfParItem.OBS
+       &formcod = &SdtNfParItem.FormCod
+       &OpeSeq  = &SdtNfParItem.OpeSeq
+       &OpePrc  = &SdtNfParItem.OpePrc
+    
+       &TotalParc += &NfpVlr
+    
+       Load
     endfor
 endevent
 
 
+event &OpeSeq.Click
 
-Event 'Excel'
-   call('gxSelDir',&Arquivo,'C:\ ','Selecione o diretório',0)
+if &FormCod = 10 or &FormCod = 11
 
-   if not null(&arquivo)
-      &arquivo += '\NotasFiscais.xls'
+    if &OpeSeq = 1 or &OpeSeq = 2
 
-      &ret = deletefile(&arquivo)
-
-      &Excel.Open(&arquivo)
-
-      &x = 0
-
-      if &CnfNfsNum = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Nota Fiscal'
-      endif
-
-      if &CnfNfsSer = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Série'
-      endif
-
-      if &CnfNfsDtaEms = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Emissão'
-      endif
-
-      if &CnfNfsCli = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Cliente'
-      endif
-
-      if &CnfNfsTotNf = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Total da Nf'
-      endif
-
-      if &CnfNfsTotPrd = 1
-         &x += 1
-         &Excel.Cells(1,&x).text = 'Total dos Produtos'
-      endif
-
-      if &CnfNfsTpTrn = 1
-         &x += 1
-         &Excel.Cells(1,&x).text = 'Tipo de Transação'
-      endif
-
-      if &CnfNfsVenNom = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Vendedor'
-      endif
-
-      if &CnfNfsForNom = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Transportadora'
-      endif
-
-      if &CnfNfsCidNom = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Cidade'
-      endif
-
-      if &CnfNfsUfCod= 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Estado'
-      endif
-
-      if &CnfNfsBseIcms = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Base de Calculo do ICMS'
-      endif
-
-      if &CnfNfsVlrIcms = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Valor do ICMS'
-      endif
-
-      if &CnfNfsBseSt = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Base de Calculo da ST'
-      endif
-
-      if &CnfNfsVlrSt = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Valor da ST'
-      endif
-
-      if &CnfNfsBseClcIpi = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Base de Calculo do IPI'
-      endif
-
-      if &CnfNfsVlrIpi = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Valor do IPI'
-      endif
-
-      if &CnfNfsOutDsp = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Outras Despesas'
-      endif
-
-      if &CnfNfsFrete = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Frete'
-      endif
-
-      if &CnfNfsDsc = 1
-         &x += 1
-         &Excel.Cells(1,&x).Text = 'Desconto'
-      endif
-
-      &y = 0
-      &x = 2
-      
-      for each line
-
-         if &CnfNfsNum = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsNum
-          endif
-    
-          if &CnfNfsSer = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Text = NfsSer
-          endif
-    
-          if &CnfNfsDtaEms = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Date = NfsDtaEms
-          endif
-    
-          if &CnfNfsCli = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Text = NfsCliNom
-          endif
-    
-          if &CnfNfsTotNf = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsVlrTotNf
-          endif
-    
-          if &CnfNfsTotPrd = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsVlrTotPrd
-          endif
-    
-          if &CnfNfsTpTrn = 1
-             &y += 1
-             &Excel.Cells(&x,&y).text = NfsTipTrnDsc
-          endif
-    
-          if &CnfNfsVenNom = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Text = NfsVenNom
-          endif
-    
-          if &CnfNfsForNom = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Text = NfsTrpNom
-          endif
-    
-          if &CnfNfsCidNom = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Text = NfsCliCidNom
-          endif
-    
-          if &CnfNfsUfCod= 1
-             &y += 1
-             &Excel.Cells(&x,&y).Text = NfsCliUfCod
-          endif
-
-          if  &CnfNfsBseIcms = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsBseClcIcms
-          endif
-
-          if  &CnfNfsVlrIcms = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsVlrIcms
-          endif
-
-          if  &CnfNfsBseSt = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsBseClcSt
-          endif
-
-          if  &CnfNfsVlrSt = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsVlrSt
-          endif
-
-          if  &CnfNfsBseClcIpi = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsBseClcIpi
-          endif
-
-          if  &CnfNfsVlrIpi = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsVlrIpi
-          endif
-
-          if &CnfNfsOutDsp = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsOutDsp
-          endif
-
-          if &CnfNfsFrete = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsVlrFrt
-          endif
-
-          if &CnfNfsDsc = 1
-             &y += 1
-             &Excel.Cells(&x,&y).Number = NfsVlrDsc
-          endif
-          
-    
-
-           &y = 0
-           &x += 1
-      endfor      
-
-      &Excel.Save()
-//      &Excel.Show()
-      &Excel.Close()
-
-      MSG('Arquivo Gerado com Sucesso !!!')
-   else
-      msg('Selecione um diretório válido')
-   endif
-EndEvent  // 'Excel'
-
-Event 'Opcoes'
-WCnfNf.Call(&Logon)
-do'Config'
-refresh
-EndEvent  // 'Opcoes'
-
-
-sub'Config'
-
-  for each
-   where CnfNfsSeq = 1
-   where CnfNfsUsr = &Logon.UsrCod
-
-    &CnfNfsSeq = CnfNfsSeq
-    &CnfNfsUsr = CnfNfsUsr
-    &CnfNfsNum = CnfNfsNum
-    &CnfNfsSer = CnfNfsSer
-    &CnfNfsDtaEms = CnfNfsDtaEms
-    &CnfNfsCli = CnfNfsCli
-    &CnfNfsTotNf = CnfNfsTotNf
-    &CnfNfsTotPrd = CnfNfsTotPrd
-    &CnfNfsTpTrn = CnfNfsTpTrn
-    &CnfNfsVenNom = CnfNfsVenNom
-    &CnfNfsForNom = CnfNfsForNom
-    &CnfNfsUfCod = CnfNfsUfCod
-    &CnfNfsCidNom = CnfNfsCidNom
-    &CnfNfsBold = CnfNfsBold
-    &CnfNfsUnderline = CnfNfsUnderline
-    &CnfNfsItalic = CnfNfsItalic
-    &CnfNfsCorLinha = CnfNfsCorLinha
-    &CnfNfsCorFonte = CnfNfsCorFonte
-    &CnfNfsFont = CnfNfsFont
-    &CnfNfsNumPed = CnfNfsNumPed
-    &CnfNfsSts = CnfNfsSts
-    &CnfNfsBseIcms = CnfNfsBseIcms
-    &CnfNfsVlrIcms = CnfNfsVlrIcms
-    &CnfNfsBseSt = CnfNfsBseSt
-    &CnfNfsVlrSt = CnfNfsVlrSt
-    &CnfNfsFrete = CnfNfsFrete
-    &CnfNfsOutDsp = CnfNfsOutDsp
-    &CnfNfsDsc = CnfNfsDsc
-    &CnfNfsBseClcIpi = CnfNfsBseClcIpi
-    &CnfNfsVlrIpi = CnfNfsVlrIpi
-
- endfor
-
-  NfsNum.Visible       = &CnfNfsNum
-  NfsDtaEms.Visible    = &CnfNfsDtaEms
-  NfsSer.Visible       = &CnfNfsSer
-  NfsCliNom.Visible    = &CnfNfsCli
-  NfsVlrTotNf.Visible  = &CnfNfsTotNf
-  NfsVlrTotPrd.Visible = &CnfNfsTotPrd
-  NfsTipTrnDsc.Visible = &CnfNfsTpTrn
-  NfsVenNom.Visible    = &CnfNfsVenNom
-  NfsTrpNom.Visible    = &CnfNfsForNom
-  NfsCliCidNom.Visible = &CnfNfsCidNom
-  NfsCliUfCod.Visible  = &CnfNfsUfCod
-  NfsNumPed.Visible    = &CnfNfsNumPed
-  NfsSts.Visible       = &CnfNfsSts
-  NfsBseClcIcms.Visible= &CnfNfsBseIcms
-  NfsVlrIcms.Visible   = &CnfNfsVlrIcms
-  NfsBseClcSt.Visible  = &CnfNfsBseSt
-  NfsVlrSt.Visible     = &CnfNfsVlrSt
-  NfsVlrFrt.Visible    = &CnfNfsFrete
-  NfsOutDsp.Visible    = &CnfNfsOutDsp
-  NfsVlrDsc.Visible    = &CnfNfsDsc
-  NfsBseClcIpi.Visible = &CnfNfsBseClcIpi
-  NfsVlrIpi.Visible    = &CnfNfsVlrIpi
-
-  if &UsrPerVenNfTot = 'N'
-     NfsVlrTotNf.Visible  = 0
-     NfsVlrTotPrd.Visible = 0
-  endif
-    
-  if &UsrPerVenNfTot = 'S'
-     NfsVlrTotNf.Visible  = 1
-     NfsVlrTotPrd.Visible = 1
-  endif
-
-  NfsNum.FontName       = &CnfNfsFont
-  NfsDtaEms.FontName    = &CnfNfsFont
-  NfsSer.FontName       = &CnfNfsFont
-  NfsCliNom.FontName    = &CnfNfsFont
-  NfsVlrTotNf.FontName  = &CnfNfsFont
-  NfsVlrTotPrd.FontName = &CnfNfsFont
-  NfsTpTrn.FontName     = &CnfNfsFont
-  NfsVenNom.FontName    = &CnfNfsFont
-  NfsTrpNom.FontName    = &CnfNfsFont
-  NfsCliCidNom.FontName = &CnfNfsFont
-  NfsCliUfCod.FontName  = &CnfNfsFont
-  NfsNumPed.FontName    = &CnfNfsFont
-  NfsSts.FontName    = &CnfNfsFont
-  NfsBseClcIcms.FontName        = &CnfNfsFont
-  NfsVlrIcms.FontName           = &CnfNfsFont
-  NfsBseClcSt.FontName          = &CnfNfsFont
-  NfsVlrSt.FontName             = &CnfNfsFont
-  NfsVlrFrt.FontName            = &CnfNfsFont
-  NfsOutDsp.FontName         = &CnfNfsFont
-  NfsVlrDsc.FontName         = &CnfNfsFont
-  NfsBseClcIpi.FontName = &CnfNfsFont
-  NfsVlrIpi.FontName    = &CnfNfsFont
-
-  NfsNum.FontBold       = &CnfNfsBold
-  NfsDtaEms.FontBold    = &CnfNfsBold
-  NfsSer.FontBold       = &CnfNfsBold
-  NfsCliNom.FontBold    = &CnfNfsBold
-  NfsVlrTotNf.FontBold  = &CnfNfsBold
-  NfsVlrTotPrd.FontBold = &CnfNfsBold
-  NfsTipTrnDsc.FontBold     = &CnfNfsBold
-  NfsVenNom.FontBold    = &CnfNfsBold
-  NfsTrpNom.FontBold    = &CnfNfsBold
-  NfsCliCidNom.FontBold = &CnfNfsBold
-  NfsCliUfCod.FontBold  = &CnfNfsBold
-  NfsNumPed.FontBold    = &CnfNfsBold
-  NfsSts.FontBold    = &CnfNfsBold
-  NfsBseClcIpi.FontBold = &CnfNfsBold
-  NfsVlrIpi.FontBold    = &CnfNfsBold
-  NfsBseClcIcms.FontBold       = &CnfNfsBold
-  NfsVlrIcms.FontBold          = &CnfNfsBold
-  NfsBseClcSt.FontBold         = &CnfNfsBold
-  NfsVlrSt.FontBold            = &CnfNfsBold
-  NfsVlrFrt.FontBold            = &CnfNfsBold
-  NfsOutDsp.FontBold        = &CnfNfsBold
-  NfsVlrDsc.FontBold        = &CnfNfsBold
-
-  NfsNum.FontItalic       = &CnfNfsItalic
-  NfsDtaEms.FontItalic    = &CnfNfsItalic
-  NfsSer.FontItalic       = &CnfNfsItalic
-  NfsCliNom.FontItalic    = &CnfNfsItalic
-  NfsVlrTotNf.FontItalic  = &CnfNfsItalic
-  NfsVlrTotPrd.FontItalic = &CnfNfsItalic
-  NfsTipTrnDsc.FontItalic     = &CnfNfsItalic
-  NfsVenNom.FontItalic    = &CnfNfsItalic
-  NfsTrpNom.FontItalic    = &CnfNfsItalic
-  NfsCliCidNom.FontItalic = &CnfNfsItalic
-  NfsCliUfCod.FontItalic  = &CnfNfsItalic
-  NfsNumPed.FontItalic    = &CnfNfsItalic
-  NfsSts.FontItalic    = &CnfNfsItalic
-  NfsBseClcIcms.FontItalic     = &CnfNfsItalic
-  NfsVlrIcms.FontItalic        = &CnfNfsItalic
-  NfsBseClcSt.FontItalic       = &CnfNfsItalic
-  NfsVlrSt.FontItalic          = &CnfNfsItalic
-  NfsVlrFrt.FontItalic         = &CnfNfsItalic
-  NfsOutDsp.FontItalic      = &CnfNfsItalic
-  NfsVlrDsc.FontItalic         = &CnfNfsItalic
-  NfsBseClcIpi.FontItalic = &CnfNfsItalic
-  NfsVlrIpi.FontItalic    = &CnfNfsItalic
-
-  NfsNum.FontUnderline       = &CnfNfsUnderline
-  NfsDtaEms.FontUnderline    = &CnfNfsUnderline
-  NfsSer.FontUnderline       = &CnfNfsUnderline
-  NfsCliNom.FontUnderline    = &CnfNfsUnderline
-  NfsVlrTotNf.FontUnderline  = &CnfNfsUnderline
-  NfsVlrTotPrd.FontUnderline = &CnfNfsUnderline
-  NfsTipTrnDsc.FontUnderline     = &CnfNfsUnderline
-  NfsVenNom.FontUnderline    = &CnfNfsUnderline
-  NfsTrpNom.FontUnderline    = &CnfNfsUnderline
-  NfsCliCidNom.FontUnderline = &CnfNfsUnderline
-  NfsCliUfCod.FontUnderline  = &CnfNfsUnderline
-  NfsNumPed.FontUnderline    = &CnfNfsUnderline
-  NfsSts.FontUnderline    = &CnfNfsUnderline
-  NfsBseClcIcms.FontUnderline    = &CnfNfsUnderline
-  NfsVlrIcms.FontUnderline        = &CnfNfsUnderline
-  NfsBseClcSt.FontUnderline    = &CnfNfsUnderline
-  NfsVlrSt.FontUnderline         = &CnfNfsUnderline
-  NfsVlrFrt.FontUnderline        = &CnfNfsUnderline
-  NfsOutDsp.FontUnderline      = &CnfNfsUnderline
-  NfsVlrDsc.FontUnderline         = &CnfNfsUnderline
-  NfsBseClcIpi.FontUnderline = &CnfNfsUnderline
-  NfsVlrIpi.FontUnderline    = &CnfNfsUnderline
-
-
-  // Cores de Fundo
-  do case
-     case &CnfNfsCorLinha = 'BLK'
-
-          NfsNum.BackColor       = rgb(0,0,0)
-          NfsDtaEms.BackColor    = rgb(0,0,0)
-          NfsSer.BackColor       = rgb(0,0,0)
-          NfsCliNom.BackColor    = rgb(0,0,0)
-          NfsVlrTotNf.BackColor  = rgb(0,0,0)
-          NfsVlrTotPrd.BackColor = rgb(0,0,0)
-          NfsTipTrnDsc.BackColor     = rgb(0,0,0)
-          NfsVenNom.BackColor    = rgb(0,0,0)
-          NfsTrpNom.BackColor    = rgb(0,0,0)
-          NfsCliCidNom.BackColor = rgb(0,0,0)
-          NfsCliUfCod.BackColor  = rgb(0,0,0)
-          NfsNumPed.BackColor    = rgb(0,0,0)
-          NfsSts.BackColor    = rgb(0,0,0)
-          NfsBseClcIcms.BackColor       = rgb(0,0,0)
-          NfsVlrIcms.BackColor       = rgb(0,0,0)
-          NfsBseClcSt.BackColor       = rgb(0,0,0)
-          NfsVlrSt.BackColor       = rgb(0,0,0)
-          NfsVlrFrt.BackColor       = rgb(0,0,0)
-          NfsOutDsp.BackColor       = rgb(0,0,0)
-          NfsVlrDsc.BackColor       = rgb(0,0,0)
-          NfsBseClcIpi.BackColor    = rgb(0,0,0)
-          NfsVlrIpi.BackColor       = rgb(0,0,0)
-
-     case &CnfNfsCorLinha = 'WHT'
-
-          NfsNum.BackColor       = rgb(255,255,255)
-          NfsDtaEms.BackColor    = rgb(255,255,255)
-          NfsSer.BackColor       = rgb(255,255,255)
-          NfsCliNom.BackColor    = rgb(255,255,255)
-          NfsVlrTotNf.BackColor  = rgb(255,255,255)
-          NfsVlrTotPrd.BackColor = rgb(255,255,255)
-          NfsTipTrnDsc.BackColor     = rgb(255,255,255)
-          NfsVenNom.BackColor    = rgb(255,255,255)
-          NfsTrpNom.BackColor    = rgb(255,255,255)
-          NfsCliCidNom.BackColor = rgb(255,255,255)
-          NfsCliUfCod.BackColor  = rgb(255,255,255)
-          NfsNumPed.BackColor    = rgb(255,255,255)
-          NfsSts.BackColor    = rgb(255,255,255)
-          NfsBseClcIcms.BackColor       = rgb(255,255,255)
-          NfsVlrIcms.BackColor       = rgb(255,255,255)
-          NfsBseClcSt.BackColor       = rgb(255,255,255)
-          NfsVlrSt.BackColor       = rgb(255,255,255)
-          NfsVlrFrt.BackColor       = rgb(255,255,255)
-          NfsOutDsp.BackColor       = rgb(255,255,255)
-          NfsVlrDsc.BackColor       = rgb(255,255,255)
-          NfsBseClcIpi.BackColor    = rgb(255,255,255)
-          NfsVlrIpi.BackColor       = rgb(255,255,255)
-
-     case &CnfNfsCorLinha = 'YLW'
-
-          NfsNum.BackColor       = rgb(255,255,0)
-          NfsDtaEms.BackColor    = rgb(255,255,0)
-          NfsSer.BackColor       = rgb(255,255,0)
-          NfsCliNom.BackColor    = rgb(255,255,0)
-          NfsVlrTotNf.BackColor  = rgb(255,255,0)
-          NfsVlrTotPrd.BackColor = rgb(255,255,0)
-          NfsTipTrnDsc.BackColor     = rgb(255,255,0)
-          NfsVenNom.BackColor    = rgb(255,255,0)
-          NfsTrpNom.BackColor    = rgb(255,255,0)
-          NfsCliCidNom.BackColor = rgb(255,255,0)
-          NfsCliUfCod.BackColor  = rgb(255,255,0)
-          NfsNumPed.BackColor    = rgb(255,255,0)
-          NfsSts.BackColor    = rgb(255,255,0)
-          NfsBseClcIcms.BackColor       = rgb(255,255,0)
-          NfsVlrIcms.BackColor       = rgb(255,255,0)
-          NfsBseClcSt.BackColor       = rgb(255,255,0)
-          NfsVlrSt.BackColor       = rgb(255,255,0)
-          NfsVlrFrt.BackColor       = rgb(255,255,0)
-          NfsOutDsp.BackColor       = rgb(255,255,0)
-          NfsVlrDsc.BackColor       = rgb(255,255,0)
-          NfsBseClcIpi.BackColor    = rgb(255,255,0)
-          NfsVlrIpi.BackColor       = rgb(255,255,0)
-
-     case &CnfNfsCorLinha = 'BLU'
-
-          NfsNum.BackColor       = rgb(0,0,255)
-          NfsDtaEms.BackColor    = rgb(0,0,255)
-          NfsSer.BackColor       = rgb(0,0,255)
-          NfsCliNom.BackColor    = rgb(0,0,255)
-          NfsVlrTotNf.BackColor  = rgb(0,0,255)
-          NfsVlrTotPrd.BackColor = rgb(0,0,255)
-          NfsTipTrnDsc.BackColor     = rgb(0,0,255)
-          NfsVenNom.BackColor    = rgb(0,0,255)
-          NfsTrpNom.BackColor    = rgb(0,0,255)
-          NfsCliCidNom.BackColor = rgb(0,0,255)
-          NfsCliUfCod.BackColor  = rgb(0,0,255)
-          NfsNumPed.BackColor    = rgb(0,0,255)
-          NfsSts.BackColor    = rgb(0,0,255)
-          NfsBseClcIcms.BackColor       = rgb(0,0,255)
-          NfsVlrIcms.BackColor       = rgb(0,0,255)
-          NfsBseClcSt.BackColor       = rgb(0,0,255)
-          NfsVlrSt.BackColor       = rgb(0,0,255)
-          NfsVlrFrt.BackColor       = rgb(0,0,255)
-          NfsVlrDsc.BackColor       = rgb(0,0,255)
-          NfsOutDsp.BackColor       = rgb(0,0,255)
-          NfsBseClcIpi.BackColor    = rgb(0,0,255)
-          NfsVlrIpi.BackColor       = rgb(0,0,255)
-
-     case &CnfNfsCorLinha = 'RED'
-
-          NfsNum.BackColor       = rgb(255,0,0)
-          NfsDtaEms.BackColor    = rgb(255,0,0)
-          NfsSer.BackColor       = rgb(255,0,0)
-          NfsCliNom.BackColor    = rgb(255,0,0)
-          NfsVlrTotNf.BackColor  = rgb(255,0,0)
-          NfsVlrTotPrd.BackColor = rgb(255,0,0)
-          NfsTipTrnDsc.BackColor     = rgb(255,0,0)
-          NfsVenNom.BackColor    = rgb(255,0,0)
-          NfsTrpNom.BackColor    = rgb(255,0,0)
-          NfsCliCidNom.BackColor = rgb(255,0,0)
-          NfsCliUfCod.BackColor  = rgb(255,0,0)
-          NfsNumPed.BackColor    = rgb(255,0,0)
-          NfsSts.BackColor    = rgb(255,0,0)
-          NfsBseClcIcms.BackColor       = rgb(255,0,0)
-          NfsVlrIcms.BackColor       = rgb(255,0,0)
-          NfsBseClcSt.BackColor       = rgb(255,0,0)
-          NfsVlrSt.BackColor       = rgb(255,0,0)
-          NfsVlrFrt.BackColor       = rgb(255,0,0)
-          NfsVlrDsc.BackColor       = rgb(255,0,0)
-          NfsOutDsp.BackColor       = rgb(255,0,0)
-          NfsBseClcIpi.BackColor    = rgb(255,0,0)
-          NfsVlrIpi.BackColor       = rgb(255,0,0)
-
-     case &CnfNfsCorLinha = 'CYN'
-
-          NfsNum.BackColor       = rgb(0,255,255)
-          NfsDtaEms.BackColor    = rgb(0,255,255)
-          NfsSer.BackColor       = rgb(0,255,255)
-          NfsCliNom.BackColor    = rgb(0,255,255)
-          NfsVlrTotNf.BackColor  = rgb(0,255,255)
-          NfsVlrTotPrd.BackColor = rgb(0,255,255)
-          NfsTipTrnDsc.BackColor     = rgb(0,255,255)
-          NfsVenNom.BackColor    = rgb(0,255,255)
-          NfsTrpNom.BackColor    = rgb(0,255,255)
-          NfsCliCidNom.BackColor = rgb(0,255,255)
-          NfsCliUfCod.BackColor  = rgb(0,255,255)
-          NfsNumPed.BackColor    = rgb(0,255,255)
-          NfsSts.BackColor    = rgb(0,255,255)
-          NfsBseClcIcms.BackColor       = rgb(0,255,255)
-          NfsVlrIcms.BackColor       = rgb(0,255,255)
-          NfsBseClcSt.BackColor       = rgb(0,255,255)
-          NfsVlrSt.BackColor       = rgb(0,255,255)
-          NfsVlrFrt.BackColor       = rgb(0,255,255)
-          NfsVlrDsc.BackColor       = rgb(0,255,255)
-          NfsOutDsp.BackColor       = rgb(0,255,255)
-          NfsBseClcIpi.BackColor    = rgb(0,255,255)
-          NfsVlrIpi.BackColor       = rgb(0,255,255)
-
-     case &CnfNfsCorLinha = 'MGN'
-
-          NfsNum.BackColor       = rgb(255,0,255)
-          NfsDtaEms.BackColor    = rgb(255,0,255)
-          NfsSer.BackColor       = rgb(255,0,255)
-          NfsCliNom.BackColor    = rgb(255,0,255)
-          NfsVlrTotNf.BackColor  = rgb(255,0,255)
-          NfsVlrTotPrd.BackColor = rgb(255,0,255)
-          NfsTipTrnDsc.BackColor     = rgb(255,0,255)
-          NfsVenNom.BackColor    = rgb(255,0,255)
-          NfsTrpNom.BackColor    = rgb(255,0,255)
-          NfsCliCidNom.BackColor = rgb(255,0,255)
-          NfsCliUfCod.BackColor  = rgb(255,0,255)
-          NfsNumPed.BackColor    = rgb(255,0,255)
-          NfsSts.BackColor    = rgb(255,0,255)
-          NfsBseClcIcms.BackColor       = rgb(255,0,255)
-          NfsVlrIcms.BackColor       = rgb(255,0,255)
-          NfsBseClcSt.BackColor       = rgb(255,0,255)
-          NfsVlrSt.BackColor       = rgb(255,0,255)
-          NfsVlrFrt.BackColor       = rgb(255,0,255)
-          NfsVlrDsc.BackColor       = rgb(255,0,255)
-          NfsOutDsp.BackColor       = rgb(255,0,255)
-          NfsBseClcIpi.BackColor    = rgb(255,0,255)
-          NfsVlrIpi.BackColor       = rgb(255,0,255)
-
-     case &CnfNfsCorLinha = 'GRN' 
-
-          NfsNum.BackColor       = rgb(0,255,0)
-          NfsDtaEms.BackColor    = rgb(0,255,0)
-          NfsSer.BackColor       = rgb(0,255,0)
-          NfsCliNom.BackColor    = rgb(0,255,0)
-          NfsVlrTotNf.BackColor  = rgb(0,255,0)
-          NfsVlrTotPrd.BackColor = rgb(0,255,0)
-          NfsTipTrnDsc.BackColor     = rgb(0,255,0)
-          NfsVenNom.BackColor    = rgb(0,255,0)
-          NfsTrpNom.BackColor    = rgb(0,255,0)
-          NfsCliCidNom.BackColor = rgb(0,255,0)
-          NfsCliUfCod.BackColor  = rgb(0,255,0)
-          NfsNumPed.BackColor    = rgb(0,255,0)
-          NfsSts.BackColor    = rgb(0,255,0)
-          NfsBseClcIcms.BackColor       = rgb(0,255,0)
-          NfsVlrIcms.BackColor       = rgb(0,255,0)
-          NfsBseClcSt.BackColor       = rgb(0,255,0)
-          NfsVlrSt.BackColor       = rgb(0,255,0)
-          NfsVlrFrt.BackColor       = rgb(0,255,0)
-          NfsVlrDsc.BackColor       = rgb(0,255,0)
-          NfsOutDsp.BackColor       = rgb(0,255,0)
-          NfsBseClcIpi.BackColor    = rgb(0,255,0)
-          NfsVlrIpi.BackColor       = rgb(0,255,0)
-
-     case &CnfNfsCorLinha = 'BRW'
-
-          NfsNum.BackColor       = rgb(165,42,42)
-          NfsDtaEms.BackColor    = rgb(165,42,42)
-          NfsSer.BackColor       = rgb(165,42,42)
-          NfsCliNom.BackColor    = rgb(165,42,42)
-          NfsVlrTotNf.BackColor  = rgb(165,42,42)
-          NfsVlrTotPrd.BackColor = rgb(165,42,42)
-          NfsTipTrnDsc.BackColor     = rgb(165,42,42)
-          NfsVenNom.BackColor    = rgb(165,42,42)
-          NfsTrpNom.BackColor    = rgb(165,42,42)
-          NfsCliCidNom.BackColor = rgb(165,42,42)
-          NfsCliUfCod.BackColor  = rgb(165,42,42)
-          NfsNumPed.BackColor    = rgb(165,42,42)
-          NfsSts.BackColor    = rgb(165,42,42)
-          NfsBseClcIcms.BackColor       = rgb(165,42,42)
-          NfsVlrIcms.BackColor       = rgb(165,42,42)
-          NfsBseClcSt.BackColor       = rgb(165,42,42)
-          NfsVlrSt.BackColor       = rgb(165,42,42)
-          NfsVlrFrt.BackColor       = rgb(165,42,42)
-          NfsVlrDsc.BackColor       = rgb(165,42,42)
-          NfsOutDsp.BackColor       = rgb(165,42,42)
-          NfsBseClcIpi.BackColor    = rgb(165,42,42)
-          NfsVlrIpi.BackColor       = rgb(165,42,42)
-
-  endcase
-
-
-
-  do case
-     case &CnfNfsCorFonte = 'BLK'
-
-          NfsNum.ForeColor       = rgb(0,0,0)
-          NfsDtaEms.ForeColor    = rgb(0,0,0)
-          NfsSer.ForeColor       = rgb(0,0,0)
-          NfsCliNom.ForeColor    = rgb(0,0,0)
-          NfsVlrTotNf.ForeColor  = rgb(0,0,0)
-          NfsVlrTotPrd.ForeColor = rgb(0,0,0)
-          NfsTipTrnDsc.ForeColor     = rgb(0,0,0)
-          NfsVenNom.ForeColor    = rgb(0,0,0)
-          NfsTrpNom.ForeColor    = rgb(0,0,0)
-          NfsCliCidNom.ForeColor = rgb(0,0,0)
-          NfsCliUfCod.ForeColor  = rgb(0,0,0)
-          NfsNumPed.ForeColor    = rgb(0,0,0)
-          NfsSts.ForeColor    = rgb(0,0,0)
-          NfsBseClcIcms.ForeColor    = rgb(0,0,0)
-          NfsVlrIcms.ForeColor    = rgb(0,0,0)
-          NfsBseClcSt.ForeColor    = rgb(0,0,0)
-          NfsVlrSt.ForeColor    = rgb(0,0,0)
-          NfsVlrFrt.ForeColor    = rgb(0,0,0)
-          NfsVlrDsc.ForeColor    = rgb(0,0,0)
-          NfsOutDsp.ForeColor    = rgb(0,0,0)
-          NfsBseClcIpi.ForeColor    = rgb(0,0,0)
-          NfsVlrIpi.ForeColor       = rgb(0,0,0)
-
-     case &CnfNfsCorFonte = 'WHT'
-
-          NfsNum.ForeColor       = rgb(255,255,255)
-          NfsDtaEms.ForeColor    = rgb(255,255,255)
-          NfsSer.ForeColor       = rgb(255,255,255)
-          NfsCliNom.ForeColor    = rgb(255,255,255)
-          NfsVlrTotNf.ForeColor  = rgb(255,255,255)
-          NfsVlrTotPrd.ForeColor = rgb(255,255,255)
-          NfsTipTrnDsc.ForeColor     = rgb(255,255,255)
-          NfsVenNom.ForeColor    = rgb(255,255,255)
-          NfsTrpNom.ForeColor    = rgb(255,255,255)
-          NfsCliCidNom.ForeColor = rgb(255,255,255)
-          NfsCliUfCod.ForeColor  = rgb(255,255,255)
-          NfsNumPed.ForeColor    = rgb(255,255,255)
-          NfsSts.ForeColor    = rgb(255,255,255)
-          NfsBseClcIcms.ForeColor    = rgb(255,255,255)
-          NfsVlrIcms.ForeColor    = rgb(255,255,255)
-          NfsBseClcSt.ForeColor    = rgb(255,255,255)
-          NfsVlrSt.ForeColor    = rgb(255,255,255)
-          NfsVlrFrt.ForeColor    = rgb(255,255,255)
-          NfsVlrDsc.ForeColor    = rgb(255,255,255)
-          NfsOutDsp.ForeColor    = rgb(255,255,255)
-          NfsBseClcIpi.ForeColor    = rgb(255,255,255)
-          NfsVlrIpi.ForeColor       = rgb(255,255,255)
-
-     case &CnfNfsCorFonte = 'YLW'
-
-          NfsNum.ForeColor       = rgb(255,255,0)
-          NfsDtaEms.ForeColor    = rgb(255,255,0)
-          NfsSer.ForeColor       = rgb(255,255,0)
-          NfsCliNom.ForeColor    = rgb(255,255,0)
-          NfsVlrTotNf.ForeColor  = rgb(255,255,0)
-          NfsVlrTotPrd.ForeColor = rgb(255,255,0)
-          NfsTipTrnDsc.ForeColor     = rgb(255,255,0)
-          NfsVenNom.ForeColor    = rgb(255,255,0)
-          NfsTrpNom.ForeColor    = rgb(255,255,0)
-          NfsCliCidNom.ForeColor = rgb(255,255,0)
-          NfsCliUfCod.ForeColor  = rgb(255,255,0)
-          NfsNumPed.ForeColor    = rgb(255,255,0)
-          NfsSts.ForeColor    = rgb(255,255,0)
-          NfsBseClcIcms.ForeColor    = rgb(255,255,0)
-          NfsVlrIcms.ForeColor    = rgb(255,255,0)
-          NfsBseClcSt.ForeColor    = rgb(255,255,0)
-          NfsVlrSt.ForeColor    = rgb(255,255,0)
-          NfsVlrFrt.ForeColor    = rgb(255,255,0)
-          NfsVlrDsc.ForeColor    = rgb(255,255,0)
-          NfsOutDsp.ForeColor    = rgb(255,255,0)
-          NfsBseClcIpi.ForeColor    = rgb(255,255,0)
-          NfsVlrIpi.ForeColor       = rgb(255,255,0)
-
-     case &CnfNfsCorFonte = 'BLU'
-
-          NfsNum.ForeColor       = rgb(0,0,255)
-          NfsDtaEms.ForeColor    = rgb(0,0,255)
-          NfsSer.ForeColor       = rgb(0,0,255)
-          NfsCliNom.ForeColor    = rgb(0,0,255)
-          NfsVlrTotNf.ForeColor  = rgb(0,0,255)
-          NfsVlrTotPrd.ForeColor = rgb(0,0,255)
-          NfsTipTrnDsc.ForeColor     = rgb(0,0,255)
-          NfsVenNom.ForeColor    = rgb(0,0,255)
-          NfsTrpNom.ForeColor    = rgb(0,0,255)
-          NfsCliCidNom.ForeColor = rgb(0,0,255)
-          NfsCliUfCod.ForeColor  = rgb(0,0,255)
-          NfsNumPed.ForeColor    = rgb(0,0,255)
-          NfsSts.ForeColor    = rgb(0,0,255)
-          NfsBseClcIcms.ForeColor    = rgb(0,0,255)
-          NfsVlrIcms.ForeColor    = rgb(0,0,255)
-          NfsBseClcSt.ForeColor    = rgb(0,0,255)
-          NfsVlrSt.ForeColor    = rgb(0,0,255)
-          NfsVlrFrt.ForeColor    = rgb(0,0,255)
-          NfsVlrDsc.ForeColor    = rgb(0,0,255)
-          NfsOutDsp.ForeColor    = rgb(0,0,255)
-          NfsBseClcIpi.ForeColor    = rgb(0,0,255)
-          NfsVlrIpi.ForeColor       = rgb(0,0,255)
-
-     case &CnfNfsCorFonte = 'RED'
-
-          NfsNum.ForeColor       = rgb(255,0,0)
-          NfsDtaEms.ForeColor    = rgb(255,0,0)
-          NfsSer.ForeColor       = rgb(255,0,0)
-          NfsCliNom.ForeColor    = rgb(255,0,0)
-          NfsVlrTotNf.ForeColor  = rgb(255,0,0)
-          NfsVlrTotPrd.ForeColor = rgb(255,0,0)
-          NfsTipTrnDsc.ForeColor     = rgb(255,0,0)
-          NfsVenNom.ForeColor    = rgb(255,0,0)
-          NfsTrpNom.ForeColor    = rgb(255,0,0)
-          NfsCliCidNom.ForeColor = rgb(255,0,0)
-          NfsCliUfCod.ForeColor  = rgb(255,0,0)
-          NfsNumPed.ForeColor    = rgb(255,0,0)
-          NfsSts.ForeColor    = rgb(255,0,0)
-          NfsBseClcIcms.ForeColor    = rgb(255,0,0)
-          NfsVlrIcms.ForeColor    = rgb(255,0,0)
-          NfsBseClcSt.ForeColor    = rgb(255,0,0)
-          NfsVlrSt.ForeColor    = rgb(255,0,0)
-          NfsVlrFrt.ForeColor    = rgb(255,0,0)
-          NfsVlrDsc.ForeColor    = rgb(255,0,0)
-          NfsOutDsp.ForeColor    = rgb(255,0,0)
-          NfsBseClcIpi.ForeColor    = rgb(255,0,0)
-          NfsVlrIpi.ForeColor       = rgb(255,0,0)
-
-     case &CnfNfsCorFonte = 'CYN'
-
-          NfsNum.ForeColor       = rgb(0,255,255)
-          NfsDtaEms.ForeColor    = rgb(0,255,255)
-          NfsSer.ForeColor       = rgb(0,255,255)
-          NfsCliNom.ForeColor    = rgb(0,255,255)
-          NfsVlrTotNf.ForeColor  = rgb(0,255,255)
-          NfsVlrTotPrd.ForeColor = rgb(0,255,255)
-          NfsTipTrnDsc.ForeColor     = rgb(0,255,255)
-          NfsVenNom.ForeColor    = rgb(0,255,255)
-          NfsTrpNom.ForeColor    = rgb(0,255,255)
-          NfsCliCidNom.ForeColor = rgb(0,255,255)
-          NfsCliUfCod.ForeColor  = rgb(0,255,255)
-          NfsNumPed.ForeColor    = rgb(0,255,255)
-          NfsSts.ForeColor    = rgb(0,255,255)
-          NfsBseClcIcms.ForeColor    = rgb(0,255,255)
-          NfsVlrIcms.ForeColor    = rgb(0,255,255)
-          NfsBseClcSt.ForeColor    = rgb(0,255,255)
-          NfsVlrSt.ForeColor    = rgb(0,255,255)
-          NfsVlrFrt.ForeColor    = rgb(0,255,255)
-          NfsVlrDsc.ForeColor    = rgb(0,255,255)
-          NfsOutDsp.ForeColor    = rgb(0,255,255)
-          NfsBseClcIpi.ForeColor    = rgb(0,255,255)
-          NfsVlrIpi.ForeColor       = rgb(0,255,255)
-
-     case &CnfNfsCorFonte = 'MGN'
-
-          NfsNum.ForeColor       = rgb(255,0,255)
-          NfsDtaEms.ForeColor    = rgb(255,0,255)
-          NfsSer.ForeColor       = rgb(255,0,255)
-          NfsCliNom.ForeColor    = rgb(255,0,255)
-          NfsVlrTotNf.ForeColor  = rgb(255,0,255)
-          NfsVlrTotPrd.ForeColor = rgb(255,0,255)
-          NfsTipTrnDsc.ForeColor     = rgb(255,0,255)
-          NfsVenNom.ForeColor    = rgb(255,0,255)
-          NfsTrpNom.ForeColor    = rgb(255,0,255)
-          NfsCliCidNom.ForeColor = rgb(255,0,255)
-          NfsCliUfCod.ForeColor  = rgb(255,0,255)
-          NfsNumPed.ForeColor    = rgb(255,0,255)
-          NfsSts.ForeColor    = rgb(255,0,255)
-          NfsBseClcIcms.ForeColor    = rgb(255,0,255)
-          NfsVlrIcms.ForeColor    = rgb(255,0,255)
-          NfsBseClcSt.ForeColor    = rgb(255,0,255)
-          NfsVlrSt.ForeColor    = rgb(255,0,255)
-          NfsVlrFrt.ForeColor    = rgb(255,0,255)
-          NfsVlrDsc.ForeColor    = rgb(255,0,255)
-          NfsOutDsp.ForeColor    = rgb(255,0,255)
-          NfsBseClcIpi.ForeColor    = rgb(255,0,255)
-          NfsVlrIpi.ForeColor       = rgb(255,0,255)
-
-     case &CnfNfsCorFonte = 'GRN' 
-
-          NfsNum.ForeColor       = rgb(0,255,0)
-          NfsDtaEms.ForeColor    = rgb(0,255,0)
-          NfsSer.ForeColor       = rgb(0,255,0)
-          NfsCliNom.ForeColor    = rgb(0,255,0)
-          NfsVlrTotNf.ForeColor  = rgb(0,255,0)
-          NfsVlrTotPrd.ForeColor = rgb(0,255,0)
-          NfsTipTrnDsc.ForeColor     = rgb(0,255,0)
-          NfsVenNom.ForeColor    = rgb(0,255,0)
-          NfsTrpNom.ForeColor    = rgb(0,255,0)
-          NfsCliCidNom.ForeColor = rgb(0,255,0)
-          NfsCliUfCod.ForeColor  = rgb(0,255,0)
-          NfsNumPed.ForeColor    = rgb(0,255,0)
-          NfsSts.ForeColor    = rgb(0,255,0)
-          NfsBseClcIcms.ForeColor    = rgb(0,255,0)
-          NfsVlrIcms.ForeColor    = rgb(0,255,0)
-          NfsBseClcSt.ForeColor    = rgb(0,255,0)
-          NfsVlrSt.ForeColor    = rgb(0,255,0)
-          NfsVlrFrt.ForeColor    = rgb(0,255,0)
-          NfsVlrDsc.ForeColor    = rgb(0,255,0)
-          NfsOutDsp.ForeColor    = rgb(0,255,0)
-          NfsBseClcIpi.ForeColor    = rgb(0,255,0)
-          NfsVlrIpi.ForeColor       = rgb(0,255,0)
-
-     case &CnfNfsCorFonte = 'BRW'
-
-          NfsNum.ForeColor       = rgb(165,42,42)
-          NfsDtaEms.ForeColor    = rgb(165,42,42)
-          NfsSer.ForeColor       = rgb(165,42,42)
-          NfsCliNom.ForeColor    = rgb(165,42,42)
-          NfsVlrTotNf.ForeColor  = rgb(165,42,42)
-          NfsVlrTotPrd.ForeColor = rgb(165,42,42)
-          NfsTipTrnDsc.ForeColor     = rgb(165,42,42)
-          NfsVenNom.ForeColor    = rgb(165,42,42)
-          NfsTrpNom.ForeColor    = rgb(165,42,42)
-          NfsCliCidNom.ForeColor = rgb(165,42,42)
-          NfsCliUfCod.ForeColor  = rgb(165,42,42)
-          NfsNumPed.ForeColor    = rgb(165,42,42)
-          NfsSts.ForeColor    = rgb(165,42,42)
-          NfsBseClcIcms.ForeColor    = rgb(165,42,42)
-          NfsVlrIcms.ForeColor    = rgb(165,42,42)
-          NfsBseClcSt.ForeColor    = rgb(165,42,42)
-          NfsVlrSt.ForeColor    = rgb(165,42,42)
-          NfsVlrFrt.ForeColor    = rgb(165,42,42)
-          NfsVlrDsc.ForeColor    = rgb(165,42,42)
-          NfsOutDsp.ForeColor    = rgb(165,42,42)
-          NfsBseClcIpi.ForeColor    = rgb(165,42,42)
-          NfsVlrIpi.ForeColor       = rgb(165,42,42)
-
-  endcase
-endsub
-
-Event 'Cancelar'
-    if not null(NfsNum)
-        If NfsSts = 'E'
-            &Mensagem = 'Deseja realmente CANCELAR a nota fiscal nº. ' + trim(str(NfsNum)) + ' ?'
-            Confirm(&Mensagem, N)
-            If Confirmed()
-                Call(PCancelaNF, &Logon,NfsNum,NfsSer,NfsNumPed)
-                refresh keep
-            endif
-        Else
-            Msg('Essa NF não pode ser Cancelada pois não está com status Enviada!')
-        EndIf
-    Else
-        Msg('Favor selecionar uma NF para Cancelar!')
-    endif
-EndEvent  // 'Cancelar'
-
-
-Event 'nfe'
-&SdtNota.Clear()
-if not null(NfsNum)
-
-  confirm('Deseja Gerar o arquivo para a Nota Fiscal Eletrônica ?')
-  if confirmed()
-      for each line 
-         Call(PVerStsNF, &Logon, NfsNum, NfsSer, &NfsSts2)
-         if &Esc = 'S' and &NfsSts2 <> 'C'
-    
-               &SdtNotaItem = new SdtNota.SdtNotaItem()
-               &SdtNotaItem.NfsNum = NfsNum
-               &SdtNotaItem.NfsSer = NfsSer
-               &SdtNota.Add(&SdtNotaItem)
-   
-    
-         endif
-      endfor
-  endif
-
-  if &SdtNota.Count > 0
-    
-    if null(&EmpDirTxtNfe)
-        csharp string dirAtual = System.Windows.Forms.Application.StartupPath;
-        csharp [!&diretorio!] = dirAtual;
-    
-        &diretorio += '\TXT NFE'
-    
-        call('gxSelDir',&Arquivo,&diretorio,'Selecione o diretório',0)
-
-
-         if not null(&arquivo)
-
-             call(PNfe4,&Logon,&SdtNota,&arquivo)
-
-             Msg('Gerado com sucesso !!!')
-
-        endif
+       msg('Operadora não pode ser VISA ou MASTER')
+       &OpeSeq = 0
 
     else
-         &arquivo = &EmpDirTxtNfe
 
-         call(PNfe4,&Logon,&SdtNota,&arquivo)
-  
-         msg('Arquivo Gerado no Diretório: '+&arquivo.Trim())
+        for each
+            where OpeSeq = &OpeSeq
+        
+            if &FormCod = 10
+               &OpePrc = OpePercCred
+            endif
+        
+            if &FormCod = 11 
+               &OpePrc = OpePercDeb
+            endif
+        
+        endfor
 
     endif
 
-    REFRESH
+endif
 
-     
-  else
-      msg('Selecione ao menos uma nota fiscal')
-  endif
+
+endevent
+
+event &FormCod.Click
+
+if &FormCod = 10 or &FormCod = 11
+   &OpeSeq = 0
+   &OpePrc = 0
+endif
+
+if &FormCod = 4 or &FormCod = 5
+
+   &OpeSeq = 1
+   
+   for each
+        where OpeSeq = 1
+
+        if &FormCod = 5
+           &OpePrc = OpePercCred
+        endif
+    
+        if &FormCod = 4
+           &OpePrc = OpePercDeb
+        endif
+
+   endfor
 
 endif
-EndEvent  // 'nfe'
 
-Event 'Dsp'
-if not null(NfsNum)
 
-     &LOGHST = 'NOTA FISCAL DE VENDA: '+TRIM(STR(NfsNum))+' - '+TRIM(NfsSer)
-     PLogOperacao.Call(&logon.UsrCod,'DSP',&LOGHST)
+if &FormCod = 8 or &FormCod = 9
 
-     call(WNotaFiscal3,&Logon,NfsNum,NfsSer)
+   &OpeSeq = 2
+   
+   for each
+        where OpeSeq = 2
+
+        if &FormCod = 8
+           &OpePrc = OpePercCred
+        endif
+    
+        if &FormCod = 9
+           &OpePrc = OpePercDeb
+        endif
+
+   endfor
+
 
 endif
-EndEvent  // 'Dsp'
 
-Event 'DANFE'
-call(RDanfe,NfsNum,NfsSer)
-EndEvent  // 'DANFE'
+if &FormCod <> 4 and &FormCod <> 5 and &FormCod <> 8 and &FormCod <> 9 and &FormCod <> 10 and &FormCod <> 11 
+   &OpePrc = 0
+   &OpeSeq = 0
+endif
+
+endevent
+
+
+
+event GrdPrd.Load
+
+&SdtNfPro.Sort('NfiSeq')
+
+for &SdtNfProItem in &SdtNfPro
+
+    &NfiSeq = &SdtNfProItem.NfiSeq
+    &NfiPrdCod = &SdtNfProItem.NfiPrdCod
+    &NfiPrdDsc = &SdtNfProItem.NfiPrdDsc
+    &NfiPrdNcmCod = &SdtNfProItem.NfiPrdNcmCod
+    &NfiCst = &SdtNfProItem.NfiCst
+    &NfiCfopCod = &SdtNfProItem.NfiCfopCod
+    &NfiCfopSeq = &SdtNfProItem.NfiCfopSeq
+    &NfiPrdUndCod = &SdtNfProItem.NfiPrdUndCod
+    &NfiQtd = &SdtNfProItem.NfiQtd
+    &NfiVlrUnt = &SdtNfProItem.NfiVlrUnt
+    &NfiVlrTot = &SdtNfProItem.NfiVlrTot
+    &NfiTotPrd = &SdtNfProItem.NfiTotPrd
+    &NfiVlrIcms = &SdtNfProItem.NfiVlrIcms
+    &NfiVlrIpi  = &SdtNfProItem.NfiVlrIpi
+    &NfiAlqIcms = &SdtNfProItem.NfiAlqIcms
+    &NfiAlqIpi  = &SdtNfProItem.NfiAlqIpi
+    &NfiOrdCompra = &SdtNfProItem.NfiOrdCompra
+    &NfiOrdCompraSeq = &SdtNfProItem.NfiOrdCompraSeq
+
+    Load
+endfor
+
+//do'soma'
+
+
+endevent
+
+event grdref.Load
+    &NfRefSeq = 0
+    for &SdtNfChRefItem in &SdtNfChRef
+        &NfRefSeq += 1
+        &NfChRef2 = &SdtNfChRefItem.NfsCh      
+        &NfRefCnpj = &SdtNfChRefItem.NfRefCnpj
+        &NfRefCpf = &SdtNfChRefItem.NfRefCpf
+        &NfRefIe = &SdtNfChRefItem.NfRefIe
+        &NfRefMod = &SdtNfChRefItem.NfRefMod             
+        &NfRefNum = &SdtNfChRefItem.NfRefNum
+        &NfRefSerie = &SdtNfChRefItem.NfRefSerie
+        &NfRefUf = &SdtNfChRefItem.NfRefUf
+        &NfRefAnoMes = &SdtNfChRefItem.NfRefAnoMes
+        &NfRefTipoDoc = &SdtNfChRefItem.NfRefTipoDoc
+        &NfRefTipoNfRef = &SdtNfChRefItem.NfsTipoNfRef
+
+        Do Case
+            Case &NfRefTipoNfRef = 2 and &NfRefMod = '01' // NF modelo 1/1A
+                &NfRefModDesc = 'modelo 01'
+            Case &NfRefTipoNfRef = 2 and &NfRefMod = '02' // NF modelo 1/1A
+                &NfRefModDesc = 'modelo 02'
+            Case &NfRefTipoNfRef = 3 and &NfRefMod = '04' // NF de produtor rural
+                &NfRefModDesc = 'NF de Produtor'
+            Case &NfRefTipoNfRef = 3 and &NfRefMod = '01' // NF de produtor rural
+                &NfRefModDesc = 'NF'
+            OtherWise
+                &NfRefModDesc = ''
+        EndCase 
+
+        grdref.Load()
+    endfor
+endevent
+
+
+
+
+Event Enter
+
+&TotalParc = 0
+&erro = 0
+for each line in grdpar
+
+   &TotalParc += &NfpVlr
+
+    if &FormCod = 4 or &FormCod = 5 or &FormCod = 8 or &FormCod = 9 or &FormCod = 10 or &FormCod = 11 
+       if null(&OpeSeq)
+          msg('Selecione a operadoda da parcela nº '+trim(str(&NfpSeq)))
+          &erro = 1
+       endif
+    endif
+
+endfor
+
+PPrcCommit.Call()
+
+// Verifica se a nota já existe (acontece quando fatura 2 pedidos ao mesmo tempo)
+for each 
+    where NfsNum = Val(&nota2)
+    where NfsSer = &NfsSer   
+        &erro = 2
+endfor
+
+Call(PVerStsPed, &Logon, &PedCod, &PedSts2)
+
+If &PedSts2 <> 1
+    &erro = 3
+EndIf
+
+
+do case
+    case null(&NfsDtaEms)
+       msg('Data de Emissão não informada')
+    case null(&NfsDtaSai)
+       msg('Data da Saída nao informada')
+    case (null(&NfsCliCpf) or &NfsCliCpf = '   .   .   -  ') and &NfsCliTp = 'F'
+       msg('CPF do Destinatário não informado')
+    case (null(&NfsCliCNPJ) or &NfsCliCNPJ = '  .   .   /    -  ') and &NfsCliTp = 'J'
+       msg('CNPJ do Destinatário não informado')
+    case (&SdtNf.NfsTpTrn = 2 or &SdtNf.NfsTpTrn = 9) and (&SdtNfChRef.Count = 0)
+       msg('Indique uma nota fiscal referênciada para prosseguir com a operação de devolução')
+       &NfChRef.Setfocus()
+    case &erro = 1
+       msg('Erro Encontrado',status)
+    case &erro = 2
+       msg('Nota Fiscal Nº. '+ &nota2.trim()+' já existe no sistema !!!')
+    case &erro = 3
+       msg('Pedido Nº. '+ Trim(Str(&PedCod)) +' já está finalizado !!!')
+    otherwise
+
+    &SdtNf.NfsDtaEms = &NfsDtaEms
+    &SdtNf.NfsDtaSai = &NfsDtaSai
+    &SdtNf.NfsHraSai = &NfsHraSai
+
+    &NfsBseClcIcms = 0
+    &nfsvlricms = 0
+    &NfsBseClcSt = 0
+    &NfsVlrSt = 0
+    &NfsVlrFrt = 0
+    &NfsVlrTotPrd = 0
+    &NfsVlrDsc = 0
+    &NfsVlrPis = 0
+    &NfsVlrCofins = 0
+    &NfsVlrIpi = 0
+    &NfsVlrTotNf = 0
+
+    for &SdtNfProItem in &SdtNfPro
+
+        &NfsBseClcIcms += &SdtNfProItem.NfiBseClcIcms
+        &nfsvlricms += &SdtNfProItem.NfiVlrIcms
+        &NfsBseClcSt += &SdtNfProItem.NfiBseClcSt
+        &NfsVlrSt += &SdtNfProItem.NfiVlrSt
+        &NfsVlrFrt += &SdtNfProItem.NfiVlrFrete
+        &NfsVlrTotPrd += &SdtNfProItem.NfiTotPrd * &SdtNfProItem.NfiIndTot // // Quando o campo NfiIndTot for = 0 (Item não compõe o total da nota), não deve somar o valor do produto no total da nota e dos produtos
+        &NfsVlrDsc += &SdtNfProItem.NfiVlrDsc
+        &NfsVlrPis += &SdtNfProItem.NfiVlrPis
+        &NfsVlrCofins += &SdtNfProItem.NfiVlrCof
+        &NfsVlrIpi += &SdtNfProItem.NfiVlrIpi
+        &NfsVlrTotNf += &SdtNfProItem.NfiVlrTot
+        
+    endfor
+
+    &SdtNf.NfsBseClcIcms = &NfsBseClcIcms
+    &SdtNf.NfsVlrIcms = &nfsvlricms 
+    &SdtNf.NfsBseClcSt =  &NfsBseClcSt 
+    &SdtNf.NfsVlrSt = &NfsVlrSt
+    &SdtNf.NfsVlrFrt =  &NfsVlrFrt
+    &SdtNf.NfsVlrTotPrd = &NfsVlrTotPrd
+    &SdtNf.NfsVlrDsc = &NfsVlrDsc 
+    &SdtNf.NfsVlrPis = &NfsVlrPis
+    &SdtNf.NfsVlrCofins = &NfsVlrCofins
+    &SdtNf.NfsVlrIpi = &NfsVlrIpi
+    &SdtNf.NfsOutDsp = &NfsOutDsp
+    &SdtNf.NfsVlrTotNf = &NfsVlrTotNf
+    &SdtNf.NfsTrpCod = &NfsTrpCod
+    &SdtNf.NfsCubagem = &NfsCubagem
+ 
+    &SdtNf.NfsTpFrt = &NfsTpFrt
+    &SdtNf.NfsAntt = &NfsAntt
+    &SdtNf.NfsPlcVei = &NfsPlcVei
+    &SdtNf.NfsVeiUf = &NfsVeiUf
+    &SdtNf.NfsQtd = &NfsQtd
+    &SdtNf.NfsEsp = &NfsEsp
+    &SdtNf.NfsMarca = &NfsMarca
+    &SdtNf.NfsNumeracao = &NfsNumeracao
+    &SdtNf.NfsPesoBruto = &NfsPesoBruto
+    &SdtNf.NfsPesoliquido = &NfsPesoLiquido
+    &SdtNf.NfsInfCmp = &NfsInfCmp
+    &SdtNf.NfsCfopSeq = &NfsCfopSeq
+    &SdtNf.NfsNum = val(&nota2)
+    &SdtNf.NfsSer = &NfsSer
+    &SdtNf.NfsTpNf = &NfsTpNf
+    &SdtNf.NfsUfEmb = &NfsUfEmb
+    &SdtNf.NfsLocEmb = &NfsLocEmb
+    &SdtNf.NfsDtaCont = &NfsDtaCont
+    &SdtNf.NfsHraCont = &NfsHraCont
+    &SdtNf.NfsJustCont = &NfsJustCont
+    &SdtNf.NfsPla1Cod = &CpgPla1Cod
+    &SdtNf.NfsPla2Cod = &CpgPla2Cod
+    &SdtNf.NfsPla3Cod = &CpgPla3Cod
+    &SdtNf.NfsPla4Cod = &CpgPla4Cod
+    &SdtNf.NfsPla5Cod = &CpgPla5Cod
+    &SdtNf.NfsDescCfop = &NfsDescCfop
+    &SdtNf.NfsVlrIcmsDest = &NfsVlrIcmsDest
+    &SdtNf.NfsVlrIcmsOri = &NfsVlrIcmsOri
+    &SdtNf.NfsVlrFCP = &NfsVlrFCP
+    &SdtNf.NfsNum = val(&nota2)
+    &SdtNf.NfsVlrIPIDev = &NfsVlrIPIDev
+    &SdtNf.NfsVlrFCPSub = &NfsVlrFCPSub
+    &SdtNf.NfsTipoNfRef = &NfsTipoNfRef
+
+    &SdtNfPar.Clear()
+    for each line in grdpar
+        &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+        &SdtNfParItem.NfpNumDoc = &NfpNumDoc
+        &SdtNfParItem.NfpSeq    = &NfpSeq
+        &SdtNfParItem.NfpVct    = &NfpVct
+        &SdtNfParItem.NfpVlr    = &NfpVlr
+        &SdtNfParItem.NfpVlr2   = &NfpVlr2
+        &SdtNfParItem.FormCod   = &formcod
+        &SdtNfParItem.OBS       = &obs
+        &SdtNfParItem.OpePrc    = &OpePrc
+        &SdtNfParItem.OpeSeq    = &OpeSeq
+        &SdtNfPar.Add(&SdtNfParItem)
+    endfor
+
+     call(PGravaNota,&Logon,&SdtNf,&SdtNfPar,&SdtNfPro,&SdtNfChRef)
+     &Gravou = 'S'
+
+     return
+
+endcase
+EndEvent  // Enter
+
+//sub'acertaparc'
+//
+//for &sdtnfparitem in &SdtNfPar
+//
+//    for each
+//        where CondCod = &SdtNf.NfsCondCod
+//
+//        &CondNumPrc = CondNumPrc
+//  
+//        if &CondNumPrc >= 1 and &SdtNfParItem.NfpSeq = 1
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc1 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc1 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 2 and &SdtNfParItem.NfpSeq = 2
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc2 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc2 / 100),2)
+//           endif
+//
+//        endif
+//        
+//        if &CondNumPrc >= 3 and &SdtNfParItem.NfpSeq = 3
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc3 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc3 / 100),2)
+//           endif
+//
+//        endif
+//
+//
+//        if &CondNumPrc >= 4 and &SdtNfParItem.NfpSeq = 4
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc4 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc4 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 5 and &SdtNfParItem.NfpSeq = 5
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc5 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc5 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 6 and &SdtNfParItem.NfpSeq = 6
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc6 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc6 / 100),2)
+//           endif
+//
+//        endif
+//
+//
+//        if &CondNumPrc >= 7 and &SdtNfParItem.NfpSeq = 7
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc7 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc7 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 8 and &SdtNfParItem.NfpSeq = 8
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc8 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc8 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 9 and &SdtNfParItem.NfpSeq = 9
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc9 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc9 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 10 and &SdtNfParItem.NfpSeq = 10
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc10 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc10 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 11 and &SdtNfParItem.NfpSeq = 11
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc11 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc11 / 100),2)
+//           endif
+//
+//        endif
+//
+//        if &CondNumPrc >= 12 and &SdtNfParItem.NfpSeq = 12
+//
+//           &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc12 / 100),2)
+//
+//           if &SdtNf.NfsVlrSer > 0
+//             &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc12 / 100),2)
+//           endif
+//
+//        endif
+//
+//    endfor
+//
+//endfor
+//
+//&Total2 = 0
+//for &SdtNfParItem in &SdtNfPar
+//
+//    &Total2 += round(&SdtNfParItem.NfpVlr,2)
+//
+//endfor
+//
+//
+//if &Total2 <> &NfsVlrTotNf
+//    
+//       &dif = &NfsVlrTotNf - &Total2
+//    
+//       for &SdtNfParItem in &SdtNfPar
+//    
+//           &SdtNfParItem.NfpVlr += &dif
+//           exit
+//    
+//       endfor
+//    
+//endif
+//
+//
+//if &SdtNf.NfsVlrSer > 0
+//
+//    &Total2 = 0
+//    for &SdtNfParItem in &SdtNfPar
+//    
+//        &Total2 += round(&SdtNfParItem.NfpVlr2,2)
+//    
+//    endfor
+//    
+//    
+//    if &Total2 <> &SdtNf.NfsVlrSer
+//        
+//           &dif = &SdtNf.NfsVlrSer - &Total2
+//        
+//           for &SdtNfParItem in &SdtNfPar
+//        
+//               &SdtNfParItem.NfpVlr2 += &dif
+//               exit
+//        
+//           endfor
+//        
+//    endif
+//
+//endif
+//
+//
+//if &ConvDiaFec > 0
+//
+//   for &SdtNfParItem in &SdtNfPar
+//
+//       // se o dia de fechamento do convenio for maior que o dia de hoje não soma 1 no mes
+//       if &ConvDiaFec > day(&SdtNfParItem.NfpVct)
+//
+//          &mes = Month(&SdtNfParItem.NfpVct)
+//          &Ano = year(&SdtNfParItem.NfpVct)
+//
+//       else
+//
+//          if month(&SdtNfParItem.NfpVct) = 12 
+//             &mes = Month(&SdtNfParItem.NfpVct) + 1
+//             if &mes > 12
+//                &mes = 1
+//             endif
+//             &Ano = year(&SdtNfParItem.NfpVct) + 1
+//          else
+//             &mes = month(&SdtNfParItem.NfpVct) + 1
+//             &Ano = year(&SdtNfParItem.NfpVct)
+//          endif
+//
+//       endif
+//
+//       &datac = padl(trim(str(&ConvDiaFec)),2,'0')+'/'+padl(trim(str(&mes)),2,'0')+'/'+trim(str(&Ano))
+//       &SdtNfParItem.NfpVct = ctod(&datac)
+//
+//   endfor
+//
+//endif
+//
+//
+//
+////&SdtNfPar.Clear()
+////&seq = 0
+////for each
+////   where CondCod = &SdtNf.NfsCondCod
+////  
+////   &CondNumPrc = CondNumPrc
+////
+////   if &CondNumPrc >= 1
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+//////      &SdtNfParItem.NfpVct = &Today + CondDia1
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc1 / 100),2)
+////
+////      if &SdtNf.NfsVlrSer > 0
+////         &SdtNfParItem.NfpVlr2 = Round(&NfsVlrTotNf * (CondPorc1 / 100),2)
+////      endif
+////
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////   endif
+////
+////   if &CondNumPrc >= 2
+////
+////       &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia2
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc2 / 100),2)      
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////   endif
+////
+////
+////    if &CondNumPrc >= 3
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia3
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc3 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////
+////   endif
+////
+////    if &CondNumPrc >= 4
+////
+////       &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia4
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc4 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////   endif
+////
+////
+////    if &CondNumPrc >= 5
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia5
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc5 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////
+////   endif
+////
+////
+////    if &CondNumPrc >= 6
+////
+////       &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia6
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc6 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////   endif
+////
+////    if &CondNumPrc >= 7
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia7
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc7 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////
+////   endif
+////
+////    if &CondNumPrc >= 8
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia8
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc8 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////
+////   endif
+////
+////    if &CondNumPrc >= 9
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia9
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc9 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////
+////   endif
+////
+////    if &CondNumPrc >= 10
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia10
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc10 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////   endif
+////
+////    if &CondNumPrc >= 11
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia11
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc11 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////
+////   endif
+////
+////
+////    if &CondNumPrc >= 12
+////
+////      &seq += 1
+////      &SdtNfParItem = new SdtNfPar.SdtNfParItem()
+////      &SdtNfParItem.NfpSeq = &seq
+////      &SdtNfParItem.NfpVct = &Today + CondDia12
+////      &SdtNfParItem.NfpVlr = Round(&NfsVlrTotNf * (CondPorc12 / 100),2)
+////      &SdtNfParItem.NfpNumDoc = trim(str(&PedCod))+'-'+trim(str(&seq))+'/'+trim(str(&CondNumPrc))
+////      &SdtNfPar.Add(&SdtNfParItem)
+////
+////   endif
+////   
+////
+////endfor
+////
+////&Total2 = 0
+////for &SdtNfParItem in &SdtNfPar
+////
+////    &Total2 += round(&SdtNfParItem.NfpVlr,2)
+////
+////endfor
+////
+////
+////if &Total2 <> &NfsVlrTotNf
+////    
+////       &dif = &NfsVlrTotNf - &Total2
+////    
+////       for &SdtNfParItem in &SdtNfPar
+////    
+////           &SdtNfParItem.NfpVlr += &dif
+////           exit
+////    
+////       endfor
+////    
+////endif
+//
+//endsub
+
+Event 'inc'
+    Do Case
+        Case &NfsTipoNfRef = 1 // NF-e
+
+            if not null(&NfChRef)            
+                &SdtNfChRefItem = new SdtNfChRef.SdtNfChRefItem()
+                &SdtNfChRefItem.NfsCh = &NfChRef
+                &SdtNfChRef.Add(&SdtNfChRefItem)
+                
+                &NfChRef = ''                            
+            else
+                Msg('Favor informar a chave de acesso referenciada!')
+                &NfChRef.Setfocus()
+            endif
+
+        Case &NfsTipoNfRef = 2 // NF modelo 1/1A
+            Call(WNotaRefMod1, &Logon, &SdtNfChRef, 0, '', 'INS')
+
+        Case &NfsTipoNfRef = 3 // NF de produtor rural
+            Call(WNotaRefProdRural, &Logon, &SdtNfChRef, 0, '', 'INS')
+
+    EndCase
+
+    grdref.Refresh()
+
+EndEvent  // 'inc'
+
+Event 'exc'
+&SdtNfChRef.Remove(&NfRefSeq)
+grdref.Refresh()
+EndEvent  // 'exc'
+
+Event 'sel'
+call(WSelPla,&CpgPla1Cod,&CpgPla2Cod,&CpgPla3Cod,&CpgPla4Cod,&CpgPla5cOD)
+for each
+    where Pla1Cod = &CpgPla1Cod
+    where Pla2Cod = &CpgPla2Cod
+    where Pla3Cod = &CpgPla3Cod
+    where Pla4Cod = &CpgPla4Cod
+    Where Pla5Cod = &CpgPla5cOD
+
+    &Pla5CodDesc = Pla5CodDesc
+    &CpgPla4Dsc = Pla5Dsc
+
+endfor
+EndEvent  // 'sel'
+
+
+//sub'soma'
+//
+//msg(&NfsBseClcIcms.ToString(),status)
+//
+//&NfsBseClcIcms.SetEmpty()
+//&nfsvlricms.SetEmpty()
+//&NfsBseClcSt.SetEmpty()
+//&NfsVlrSt.SetEmpty()
+//&NfsVlrFrt.SetEmpty()
+//&NfsVlrTotPrd.SetEmpty()
+//&NfsVlrDsc.SetEmpty()
+//&NfsVlrPis.SetEmpty()
+//&NfsVlrCofins.SetEmpty()
+//&NfsVlrIpi.SetEmpty()
+//&NfsVlrTotNf.SetEmpty()
+//
+////msg('Entrei')
+//
+//    for &SdtNfProItem in &SdtNfPro
+//    
+//        &NfsBseClcIcms += &SdtNfProItem.NfiBseClcIcms
+//        &nfsvlricms += &SdtNfProItem.NfiVlrIcms
+//        &NfsBseClcSt += &SdtNfProItem.NfiBseClcSt
+//        &NfsVlrSt += &SdtNfProItem.NfiVlrSt
+//        &NfsVlrFrt += &SdtNfProItem.NfiVlrFrete
+//        &NfsVlrTotPrd += &SdtNfProItem.NfiTotPrd
+//        &NfsVlrDsc += &SdtNfProItem.NfiVlrDsc
+//        &NfsVlrPis += &SdtNfProItem.NfiVlrPis
+//        &NfsVlrCofins += &SdtNfProItem.NfiVlrCof
+//        &NfsVlrIpi += &SdtNfProItem.NfiVlrIpi
+//        &NfsVlrTotNf += &SdtNfProItem.NfiVlrTot
+//    
+//    endfor
+//endsub
 
 
 sub'tipo'
 for each
    where TpEndSeq = &EmpTpEndSeq
-   &TipoEnd = TpEndDsc.Trim()
+
+   &TpEndDsc = TpEndDsc.Trim()
+
 endfor
 endsub
+
+
+Event &NfsTipoNfRef.Click
+    Do 'ConfGridRef'
+EndEvent
+
+
+Sub 'ConfGridRef'
+    Do Case
+        Case &NfsTipoNfRef = 1 // NF-e
+
+// Alteração 20/05/2019: Se alterar a visibilidade dos campos, o grid para de funcionar barra de rolagem vertical
+//            &NfRefSeq.visible = 1
+//            &NfChRef2.visible = 1       
+//            &NfRefCnpj.visible = 0 
+//            &NfRefCpf.visible = 0 
+//            &NfRefIe.visible = 0 
+//            &NfRefMod.visible = 0 
+//            &NfRefModDesc.visible = 0 
+//            &NfRefNum.visible = 0 
+//            &NfRefSerie.visible = 0 
+//            &NfRefUf.visible = 0
+//            &NfRefAnoMes.Visible = 0
+//            &NfRefTipoDoc.Visible = 0
+
+            lblNfChRef.Visible = 1
+            &NfChRef.visible = 1
+
+        Case &NfsTipoNfRef = 2 // NF modelo 1/1A
+
+//            &NfRefSeq.visible = 1
+//            &NfChRef2.visible = 0 
+//            &NfRefIe.visible = 0
+//            &NfRefCnpj.visible = 1
+//            &NfRefCpf.visible = 0 
+//            &NfRefMod.visible = 0 
+//            &NfRefModDesc.visible = 1 
+//            &NfRefNum.visible = 1 
+//            &NfRefSerie.visible = 1 
+//            &NfRefUf.visible = 1
+//            &NfRefAnoMes.Visible = 1
+//            &NfRefTipoDoc.Visible = 0
+
+            lblNfChRef.Visible = 0
+            &NfChRef.visible = 0
+
+        Case &NfsTipoNfRef = 3 // NF de produtor rural
+
+//            &NfRefSeq.visible = 1
+//            &NfChRef2.visible = 0
+//            &NfRefIe.visible = 1
+//            &NfRefCnpj.visible = 1
+//            &NfRefCpf.visible = 1
+//            &NfRefMod.visible = 0
+//            &NfRefModDesc.visible = 1
+//            &NfRefNum.visible = 1
+//            &NfRefSerie.visible = 1
+//            &NfRefUf.visible = 1
+//            &NfRefAnoMes.Visible = 1
+//            &NfRefTipoDoc.Visible = 1
+
+            lblNfChRef.Visible = 0
+            &NfChRef.visible = 0
+
+    EndCase
+
+//    grdref.Refresh()
+EndSub
