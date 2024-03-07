@@ -110,7 +110,49 @@ event start
           endif
     
        endfor
+
+       //Importação
     
+       for each
+         where NfsNum = &NfsNum
+         where NfsSer = &NfsSer
+         defined by NfiImpNroDI
+            
+           &SdtImpItem = new SdtImp.SdtImpItem()
+           &SdtImpItem.NfiImpNroDI        = NfiImpNroDI
+           &SdtImpItem.NfiImpDtaDI        = NfiImpDtaDI
+           &SdtImpItem.NfiImpcExportador  = NfiImpcExportador
+           &SdtImpItem.NfiImpViaTransp    = NfiImpViaTransp
+           &SdtImpItem.NfiImpVlrAFRMM     = NfiImpVlrAFRMM
+           &SdtImpItem.NfiImpTpIntermedio = NfiImpTpIntermedio
+           &SdtImpItem.NfiImpUFDesemb     = NfiImpUFDesemb
+           &SdtImpItem.NfiImpLocDesemb    = NfiImpLocDesemb
+           &SdtImpItem.NfiImpDtaDesemb    = NfiImpDtaDesemb
+           &SdtImpItem.NfiImpCNPJ         = NfiImpCNPJ
+           &SdtImpItem.NfiImpUFTer        = NfiImpUFTer
+           &SdtImpItem.NfiImpSeq          = NfiImpSeq
+           &SdtImpItem.NfiSeq             = NfiSeq
+           &SdtImp.Add(&SdtImpItem)
+       endfor
+       
+       //Adições
+       for each
+         where NfsNum = &NfsNum
+         where NfsSer = &NfsSer
+         defined by NfiImpAdcSeq
+          
+           &SdtADIItem = new SdtAdi.SdtAdiItem()
+           &SdtADIItem.NfiImpAdcNro     = NfiImpAdcNro
+           &SdtADIItem.NfiImpAdcFab     = NfiImpAdcFab
+           &SdtADIItem.NfiImpAdcNroDraw = NfiImpAdcNroDraw
+           &SdtADIItem.NfiImpAdcVlrDesc = NfiImpAdcVlrDesc
+           &SdtADIItem.NfiImpAdcSeq     = NfiImpAdcSeq
+           &SdtADIItem.NfiSeq           = NfiSeq
+           &SdtADIItem.NfiImpSeq        = NfiImpSeq
+           &SdtADI.Add(&SdtADIItem)
+         
+       endfor
+
        for each
          where CcrNumNf = &NfsNum
          &Pla5CodDesc = CcrPla5CodDesc
@@ -220,7 +262,7 @@ endevent
 
 
 Event 'vispro'
-    call(WNotaItem2,NfiSeq,NfiPrdCod,&NfsNum,&NfsSer)
+    call(WNotaItem2,NfiSeq,NfiPrdCod,&NfsNum,&NfsSer, &sdtImp, &sdtAdi)
 EndEvent  // 'vispro'
 
 
@@ -319,7 +361,7 @@ do case
     &SdtNf.NfsVeiUf = &NfsVeiUf
     &SdtNf.NfsTipoNfRef = &NfsTipoNfRef
 
-     call(PGravaNota2,&Logon,&SdtNf,&NfsNum,&NfsSer)
+     call(PGravaNota2,&Logon,&SdtNf,&NfsNum,&NfsSer,&SdtImp,&SdtADI)
 
      return
 
