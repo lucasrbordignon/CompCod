@@ -1,2422 +1,1146 @@
- 
-Msg("Montagem Txt... Nota Fiscal Eletrônica",status)
+Event Start
+
+    Form.Caption = Form.Caption + ' - (' + Trim(&Pgmname) + ')'
+
+
+btnalt.TooltipText = 'Alterar Nota Fiscal'
+BtnExc.TooltipText = 'Excluir Nota Fiscal'
+BtnDsp.TooltipText = 'Visualizar Nota Fiscal'
+BtnExit.TooltipText = 'Sair'
+BtnImp.TooltipText = 'Imprimir Relação de Notas Fiscais'
+btnexcel.TooltipText = 'Gerar Relação de Notas Fiscais .XLS'
+btncanc.TooltipText = 'Cancelar Nota Fiscal'
+BtnNfe.TooltipText = 'Gerar arquivo da NF-e'
+BtnDanfe.TooltipText = 'Pré Visualizar Danfe'
+
+SETINHA.TooltipText  = 'Configurações'
 
 for each
-   Where EmpCod = &Logon.EmpCod
-      
-      &EmpModImp = EmpModImp
-      &EmpProcEmi = EmpProcEmi
-      &EmpIdAmb    = EmpIdAmb  
+   where UsrCod = &Logon.UsrCod
+   where UsrPerSeq = 1
 
-      if not null(EmpVerLei)
-         &EmpVerLei    = EmpVerLei
-      else
-         &EmpVerLei    = '4.00'
-      endif
+   &UsrPerVenNf = UsrPerVenNf
+   &UsrPerVenNfUpd = UsrPerVenNfUpd
+   &UsrPerVenNfDsp = UsrPerVenNfDsp
+   &UsrPerVenNfDlt = UsrPerVenNfDlt
+   &UsrPerVenNfTot = UsrPerVenNfTot
 
-      if not null(EmpVerEmi)
-         &EmpVerEmi    = EmpVerEmi
-      else
-         &EmpVerEmi    = '4.00.00'
-      endif
-
-      &EmpCRT = EmpCRT
-      &EmpPerCredIcms = EmpPerCredIcms 
-      &EmpTipoLote = EmpTipoLote
-
-      &EmpNom = EmpNom
-      &EmpNomFan = EmpNomFan
-      &EmpCnpj = EmpCnpj
-      &EmpIE = EmpIE
-      &EmpIEise = EmpIEise
-
-      if &EmpIEise = 'S'
-         &EmpIE = 'ISENTO'
-      endif
-
-      &EmpEnd = EmpEnd
-      &EmpEndNum = EmpEndNum
-      &EmpEndComp = EmpEndComp
-      &EmpEndBai = EmpEndBai
-      &EmpCep = EmpCep
-      &EmpCidade = EmpCidade
-      &EmpUf = EmpUf
-      &EmpFone = EmpFone
-      &EmpTpEndSeq = EmpTpEndSeq
-
-      do'tipo'
-
-      &EmpInscMun = EmpInscMun
-      &EmpCnae = EmpCnae
-
-      &EmpCnae = strreplace(&EmpCnae,'.','')
-      &EmpCnae = strreplace(&EmpCnae,'-','')
-      &EmpCnae = strreplace(&EmpCnae,'/','')
-      &EmpCnae = strreplace(&EmpCnae,'\','')
-      &EmpCnae = strreplace(&EmpCnae,',','')
-
-      &EmpCnpj = strreplace(&EmpCnpj,'.','')
-      &EmpCnpj = strreplace(&EmpCnpj,'-','')
-      &EmpCnpj = strreplace(&EmpCnpj,'/','')
-      &EmpCnpj = strreplace(&EmpCnpj,'\','')
-      &EmpCnpj = strreplace(&EmpCnpj,',','')
-
-      &EmpIE = strreplace(&EmpIE,'.','')
-      &EmpIE = strreplace(&EmpIE,'-','')
-      &EmpIE = strreplace(&EmpIE,'/','')
-      &EmpIE = strreplace(&EmpIE,'\','')
-      &EmpIE = strreplace(&EmpIE,',','')
-
-      &EmpCep = strreplace(&EmpCep,'-','')
-      &EmpCep = strreplace(&EmpCep,'.','')
-      &EmpCep = strreplace(&EmpCep,' ','')
-
-      &EmpFone = strreplace(&EmpFone,'-','')
-      &EmpFone = strreplace(&EmpFone,'(','')
-      &EmpFone = strreplace(&EmpFone,')','')
-      &EmpFone = strreplace(&EmpFone,' ','')
-
-      &EmpIdent = EmpIdent         
 endfor
+
+if &UsrPerVenNf = 'N'
+   Msg('Usuário não possui permissão de acesso a esta operação')
+   return
+endif
+
+
+if  &UsrPerVenNfUpd = 'N' and &UsrPerVenNfDlt = 'N' and &UsrPerVenNfDsp = 'S' 
+   btnnfe.Enabled = 0
+   btncanc.Enabled = 0
+endif
+
+if &UsrPerVenNfDsp = 'N'
+   BtnDsp.Enabled = 0
+endif
+
+if &UsrPerVenNfDlt = 'N'
+   BtnExc.Enabled = 0
+endif
+
+&NfsSts = ''
+&NfsTpTrn = 0
+
+
+ //atribui configurações iniciais
+    Call(PConfigNfs, &logon,&CnfNfsBold,&CnfNfsCidNom ,&CnfNfsCli ,&CnfNfsCorFonte ,&CnfNfsCorLinha ,&CnfNfsDtaEms ,&CnfNfsFont, &CnfNfsForNom, &CnfNfsItalic ,&CnfNfsNum ,&CnfNfsSeq ,&CnfNfsSer ,&CnfNfsTotNf ,&CnfNfsTotPrd ,&CnfNfsTpTrn ,&CnfNfsUfCod ,&CnfNfsUnderline ,&CnfNfsUsr ,&CnfNfsVenNom,&CnfNfsNumPed,&CnfNfsSts,&CnfNfsBseIcms,&CnfNfsVlrIcms,&CnfNfsBseSt,&CnfNfsVlrSt,&CnfNfsFrete,&CnfNfsOutDsp,&CnfNfsDsc,&CnfNfsBseClcIpi,&CnfNfsVlrIpi)
+    do'Config'
+
+if &UsrPerVenNfTot = 'N'
+   LBLTOT.Visible       = 0
+   &TotaPed.Visible     = 0
+   NfsVlrTotNf.Visible  = 0
+   NfsVlrTotPrd.Visible = 0
+endif
+
+if &UsrPerVenNfTot = 'S'
+   LBLTOT.Visible       = 1
+   &TotaPed.Visible     = 1
+   NfsVlrTotNf.Visible  = 1
+   NfsVlrTotPrd.Visible = 1
+endif
+
+&UfCod.Additem('','')
+&UfCod = ''
+   
 
 for each
-   where UfCod = &EmpUf
-        &UfCodUf = UfCodUf
+   where EmpCod = &Logon.EmpCod
+
+   &EmpLogoNome = EmpLogoNome
+   &EmpNomFan = EmpNomFan
+
+   &EmpCnpj = EmpCnpj
+   &EmpNom = EmpNom
+   &EmpFone = EmpFone
+
+   if EmpIEise = 'S'
+
+         &EmpIe = 'ISENTO'
+
+   else
+
+         &EmpIe = EmpIE
+
+   endif
+
+   &EmpTpEndSeq = EmpTpEndSeq
+   &EmpCnpj = EmpCnpj
+   &EmpVerLei = EmpVerLei
+   &EmpProcEmi = EmpProcEmi
+   &EmpDirTxtNfe = EmpDirTxtNfe
+   do'tipo'
+
+   &End = upper(&TipoEnd.Trim())+space(1)+EmpEnd.Trim()+' - '+EmpEndComp.Trim()+','+EmpEndNum.Trim()+' - '+EmpEndBai.Trim()
+   &End2 = EmpCep.Trim()+' - '+EmpCidade.Trim()+' - '+EmpUf.Trim()
+
 endfor
 
-for each
-    where UfCod = &EmpUf
-    where CidNom = &EmpCidade
-        &Empcidcod = CidCod
-endfor
-
-for each
-   where UfCod = &EmpUf
-
-       if not null(UfInscSub)
-          &UfInscSub = UfInscSub
-          &UfInscSub = StrReplace(&UfInscSub,'-','')
-          &UfInscSub = StrReplace(&UfInscSub,',','')
-          &UfInscSub = StrReplace(&UfInscSub,'*','')
-          &UfInscSub = StrReplace(&UfInscSub,'.','')
-          &UfInscSub = StrReplace(&UfInscSub,'#','')
-          &UfInscSub = StrReplace(&UfInscSub,'/','')
-          &UfInscSub = StrReplace(&UfInscSub,' ','')
-          &UfInscSub = Trim(&UfInscSub)
-       endif 
-endfor
-      
-
-&Arquivo  = Trim(&arquivo) + Trim('\ ') 
-&Arquivo  += 'NotaFiscal.txt' 
-
-&ret = Deletefile(&Arquivo) // Apaga Arquivo ja existente
-
-//Criando Arquivo
-&ret = DFWOpen(&Arquivo,'','',0)
-&Linha  = 'NOTAFISCAL|' + Trim(str(&SdtNota.Count))
-
-//Gerando Linha no Arquivo
-&ret = DFWPTxt(&Linha,1000)
-&ret = DFWNext()
-
-do 'montaArquivo'
-
-//Finalizando Arquivo
-&ret = DFWClose()
-
-
-sub 'MontaArquivo'
-&TiraBarra = 'S'
-
-for &SdtNotaItem in &SdtNota
-
-   for each
-      where NfsNum = &SdtNotaItem.NfsNum
-      where NfsSer = &SdtNotaItem.NfsSer
-            
-
-            &linha  = 'A|'+trim(&EmpVerLei)      //ACERTAR A VERSAO NO BANCO DE DADOS ATRIBUTO NFE002, COMENTADO ACIMA
-            &linha  += '|'                       // Informar em branco este campo
-            &ret = DFWPTxt(&Linha,1000)
-            &ret = DFWNext()
-            //***************************************************************
-
-            &NfsNumPed = NfsNumPed
-            &NfsCfopSeq = NfsCfopSeq
-            &NfsCliCod = NfsCliCod
-            &NfsForCod = NfsForCod
-            &NfsNum    = NfsNum
-            &NfsSer    = NfsSer
-            &NfsTipTrnNOP  = NfsTipTrnNOP            
-            &NfsConsFinal = NfsConsFinal             
-
-            // NfsSts = 'E' // Comentado dia 12/02/2019: Só vai ficar com status enviada quando importar o retorno do emissor.
-            
-            do'DadosPedido'
-            do'opr'
-            do'cliente'
-
-            &Dia = Padl(Trim(Str(Day(NfsDtaEms),2,0)),2,'0')
-            &Mes = Padl(Trim(Str(Month(NfsDtaEms),2,0)),2,'0')
-            &Ano = str(Year(NfsDtaEms),4,0)
-
-            csharp System.TimeZone localZone = System.TimeZone.CurrentTimeZone;
-            csharp [!&Horario!] = localZone.DaylightName;
-
-            if &Horario = 'Horário brasileiro de verão'
-                &DtaEmi =  &Ano + "-" + &Mes + '-' + &Dia + 'T' +&Time + '-02:00'
-            else
-                &DtaEmi =  &Ano + "-" + &Mes + '-' + &Dia + 'T' +&Time + '-03:00'
-            endif
-
-            &Dia = Padl(Trim(Str(Day(NfsDtaSai),2,0)),2,'0')
-            &Mes = Padl(Trim(Str(Month(NfsDtaSai),2,0)),2,'0')
-            &Ano = str(Year(NfsDtaSai),4,0)
-
-            If Not Null(NfsHraSai)
-                &HoraSaida = TtoC(NfsHraSai)
-            Else
-                &HoraSaida = &Time
-            EndIf
-
-            if &Horario = 'Horário brasileiro de verão'
-               &DtaSai =  &Ano + "-" + &Mes + '-' + &Dia + 'T' + Trim(&HoraSaida) + '-02:00'
-            else
-               &DtaSai =  &Ano + "-" + &Mes + '-' + &Dia + 'T' + Trim(&HoraSaida) + '-03:00'
-            endif
-
-            &NfsDtaCont = NfsDtaCont   
-
-            &Dia             =  NullValue(&Dia)
-            &Mes             =  NullValue(&Mes)
-            &Ano             =  NullValue(&Ano)
-            &Data_Formatada  =  NullValue(&Data_Formatada)
-        
-            &Dia             =  Padl(Trim(Str(Day(&NfsDtaCont),2,0)),2,'0')
-            &Mes             =  Padl(Trim(Str(Month(&NfsDtaCont),2,0)),2,'0')
-            &Ano             =  Str(Year(&NfsDtaCont),4,0)
-        
-            &Data_Formatada  =  &Ano + "-" + &Mes + '-' + &Dia    
-
-            do case
-               case &EmpUf = &CliUfCod
-                   &iddest = '1'
-               case &EmpUf <> &CliUfCod and &CliUfCod <> 'EX'
-                   &iddest = '2'
-               case &CliUfCod = 'EX'
-                   &iddest = '3'
-            otherwise
-                   &iddest = '1'
-            endcase
-
-            &NfsSer2 = val(NfsSer) 
-
-            //identificadores da NF-e
-            &linha = 'B|'+trim(str(&UfCodUf)) // N  2    Cod. UF
-            &linha += '|'                                      // N  9    Chave de acesso
-            &linha += '|'+trim(NfsDescCfop)                       // C 60    Descr. Nat. op.
-            &linha += '|'+trim('55')                          // C  2    Cod. Mod. NF
-            &linha += '|'+trim(str(&NfsSer2))                // N  3    Serie Doc. Fiscal
-            &linha += '|'+trim(str(NfsNum))       // N  9    Num. Doc. Fiscal
-            &linha += '|'+trim(&DtaEmi)                       // D       Data de emissao
-            &linha += '|'+trim(&DtaSai)                  // D       Data de saida
-            &linha += '|'+&iddest                        // N       IDENTIFICADOR DE DESTINO DA OPERAÇÃO
-            &linha += '|'+trim(str(NfsTpNf,1))              // N   1   Tipo Doc. Fiscal
-            &linha += '|'+Padl(trim(str(&Empcidcod,7)),7,'0')// N   7   Cod. Municipio
-            &linha += '|'+trim(str(&EmpModImp,1))          // N   1   Formanto de impressao do Danfe 
-            &linha += '|'+trim(str(&EmpIdAmb,1))          // N   1   Forma de emissao da NF-e
-            &linha += '|'                                    // N   1   Digito verificador da chave de acesso da NF-e
-            &linha += '|'+trim(str(&EmpIdent,1))             // N   1   Identificacao do Ambiente
-            &linha += '|'+trim(str(&CfopFinEmi,1))              // N   1   Finaldidade de emissao da NF-e
-            &linha += '|'+trim(str(&EmpProcEmi,1))                      // N   1   Processo da emissao da NF-e
-            &linha += '|'+trim(&EmpVerEmi)                 // C  20   Versao do Processo da emissao da NF-e - 
-
-            if &EmpProcEmi = 2 // se a nota estiver em contingencia         
-
-                &Hora = Ttoc(NfsHraCont)
-
-                if &Horario = 'Horário brasileiro de verão'
-                   &DH_Cont = &Data_Formatada + 'T' + &Hora + '-02:00'
-                   &DH_cont = trim(&DH_cont)
-                else
-                   &DH_Cont = &Data_Formatada + 'T' + &Hora + '-03:00'
-                   &DH_cont = trim(&DH_cont)
-                endif
-                
-                &linha += '|'+trim(&DH_Cont)                      // D      Data e hora de entrada em contingencia (AAAA-MM-DDTHH:MM:SS) (NEW)
-                &linha += '|'+trim(NfsJustCont)                   // D      Justificativa da contingencia (New)
-
-            else
-                &linha += '|'                                     //  D      Data e hora de entrada em contingencia (AAAA-MM-DDTHH:MM:SS) (NEW)
-                &linha += '|'                                     //  D      Justificativa da contingencia (New)
-            endif            
-
-            if NfsConsFinal = 'S'//Consumidor Final
-               &Linha += '|1'
-            else 
-               &Linha += '|0'
-            endif
-
-            &Linha += '|' + Trim(Str(&PedIndPres))              // N 1  indPres         Indicador de presença do comprador no estabelecimento comercial no momento da operação 
-            &Linha += '|' + Trim(Str(&PedIndIntermed))          // N 1  indIntermed     Indicador de Intermediador/Marketplace
-            &Linha += '|' + Trim(&PedCnpjIntermed)              // C 14 CNPJIntermed    CNPJ do Intermediador da Negociação
-            &Linha += '|' + Trim(&PedIdCadIntTran)              // C 60 idCadIntTran    Identidicador do cadastro no intermediador
-  
-            do 'tira_car'
-
-        //***********************************************************************
-            for each
-               defined by NfChRef
-
-               if not null(NfChRef)
-        
-                   &linha = 'B13|'+trim(NfChRef)  //  N 44       Chave de acesso da NF-e         esta C 44 no sistema 
-                   do 'tira_car'
-        
-               endif
-            endfor 
-        //************************************************************************
-
-
-        //***********************************************************************
-            For Each NfRefSeq
-                Defined by NfRefSeq
-
-                If NfRefTipoNfRef = 2 //  Informação da NF modelo 1/1A referenciada
-                    &linha  = 'B14|' + trim(str(NfRefUfCodIbge))      // N 2     Código da UF do emitente
-                    &linha += '|' + trim(NfRefAnoMes)                 // N 4     Ano e Mês de emissão da NF-e
-
-                    &NfRefCnpj = NfRefCnpj
-                    &NfRefCnpj = strreplace(&NfRefCnpj,'.','')
-                    &NfRefCnpj = strreplace(&NfRefCnpj,'-','')
-                    &NfRefCnpj = strreplace(&NfRefCnpj,'/','')
-
-                    &linha += '|' + trim(&NfRefCnpj)                  // N 14    CNPJ do emitente
-                    &linha += '|' + trim(NfRefMod)                    // N 2     Modelo do Documento Fiscal
-                    &linha += '|' + trim(NfRefSerie)                  // N 3     Série do Documento Fiscal
-                    &linha += '|' + trim(str(NfRefNum))               // N 9     Número do Documento Fiscal
-                    do 'tira_car'                
-                EndIf
-
-                If NfRefTipoNfRef = 3 //  Informações da NF de produtor rural referenciada
-                    &linha  = 'B20A|' + trim(str(NfRefUfCodIbge))     // N 2     Código da UF do emitente
-                    &linha += '|' + trim(NfRefAnoMes)                 // N 4     Ano e Mês de emissão da NF-e
-                    &linha += '|' + trim(NfRefIe)                     // N 4     IE do emitente
-                    &linha += '|' + trim(NfRefMod)                    // N 2     Modelo do Documento Fiscal
-                    &linha += '|' + trim(NfRefSerie)                  // N 3     Série do Documento Fiscal
-                    &linha += '|' + trim(str(NfRefNum))               // N 9     Número do Documento Fiscal
-                    do 'tira_car'     
-          
-                    &NfRefCnpj = NfRefCnpj
-                    &NfRefCnpj = strreplace(&NfRefCnpj,'.','')
-                    &NfRefCnpj = strreplace(&NfRefCnpj,'-','')
-                    &NfRefCnpj = strreplace(&NfRefCnpj,'/','')
-
-                    &NfRefCpf = NfRefCpf
-                    &NfRefCpf = strreplace(&NfRefCpf,'.','')
-                    &NfRefCpf = strreplace(&NfRefCpf,'-','')
-                    &NfRefCpf = strreplace(&NfRefCpf,'/','')
-
-                    If NfRefTipoDoc = 1
-                        &linha  = 'B20D|' + trim(&NfRefCnpj)           // N 14     CNPJ do emitente
-                        do 'tira_car'                     
-                    Else
-                        &linha  = 'B20E|' + trim(&NfRefCpf)            // N 11     CPF do emitente
-                        do 'tira_car'                     
-                    EndIF  
-                EndIf
-            EndFor
-        //************************************************************************
-
-
-        //************************************************************************
-
-             //Emitente
-            &linha = 'C|'+trim(&EmpNom)     // C  60   Razao social ou nome do emitente
-            &linha += '|'+trim(&EmpNomFan)  // c  60   Nome fantasia
-            &linha += '|'+trim(&EmpIE)     // C  14   I.E.
-            &linha += '|'+trim(&UfInscSub)                   // C  14   I.E. do subst. trib.
-            &linha += '|'+trim(&EmpInscMun)     // C  15   Inscr. municipal
-            &linha += '|'+trim(&EmpCnae)      // C   7   Cnae fiscal
-            &linha += '|'+trim(&EmpCRT)// N   1   Codigo do Regime Tributário (New)
-            do 'tira_car'
-            
-            if not null(&EmpCnpj)
-
-               &linha = 'C02|'+trim(&EmpCnpj)  // C  14   Cnpj do emitente
-               do 'tira_car'
-               
-            endif
-
-            //*********************************************************
-            //Endereco
-            &linha = 'C05|'+trim(&TipoEnd)+'  '+trim(&EmpEnd)   // C  60   Logradouro
-            &linha += '|'+trim(&EmpEndNum)  // C  60   Numero
-            &linha += '|'+trim(&EmpEndComp)  // C  60   Complemento
-            &linha += '|'+trim(&EmpEndBai)     // C  60   bairro
-            &linha += '|'+Padl(trim(str(&Empcidcod,7)),7,'0')  // N   7   Cod. municipio
-            &linha += '|'+trim(&EmpCidade)     // C  60   Nome do municipio
-            &linha += '|'+trim(&EmpUf)      // C   2   Sigla da UF
-            &linha += '|'+Padl(trim(&EmpCep),8,'0')  // N   8   Cod. Cep 
-            &linha += '|'+trim('1058')      // N   4   cod. pais
-            &linha += '|'+trim('Brasil')    // C  60   Nome do pais
-            &linha += '|'+trim(&EmpFone)     // N  10   telefone
-            do 'tira_car'
-             
-            //***********************************************
-            
-            // Destinatario
-            if &EmpIdent = 1
-               &linha = 'E|'+trim(&CliNom)       // C  60   Razao Social ou nome do destinatario
-            else
-               &linha = 'E|NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
-            endif
-
-            if &EmpIdent = 1
-                If Null(&CliInsProdRural) // Não é produtor rural
-                    &linha += '|'+trim(&CliIes)    // C  14   I.E.  
-                Else // É um produtor rural
-                    &linha += '|'+trim(&CliInsProdRural)    // C  14   I.E. 
-                EndIf
-            else
-               &Linha += '|'
-            endif
-
-            &linha += '|'+trim(&CliInsSuf)    // C   9   Inscr. suframa
-            &linha += '|'+trim(&CliEmail)      // C  200   E-mail  
-
-            do case
-               case &CliIeIse = 'I'
-                   &Linha += '|2'
-               case &CliIeIse = 'C'
-                   &Linha += '|1'
-               case &CliIeIse = 'N'
-                   &Linha += '|9'
-           endcase
-                        
-            &linha += '|'+trim(&CliIM)    // C   9   Inscr. Municipal
-
-            do 'tira_car'         
-            
-            if &CliTp = 'J'
-               if &EmpIdent = 1
-                  &linha = 'E02|'+trim(&CliCnpj)  // C  14   cnpj
-                  do 'tira_car'
-               else
-                  &linha = 'E02|99999999000191'  // C  14   cnpj
-                  do 'tira_car'
-               endif   
-            endif
-
-            if &CliTp = 'F'
-               &linha = 'E03|'+trim(&CliCpf)   // C  11   cpf
-               do 'tira_car'
-            endif
-
-            if &CliTp = 'E'
-               &linha = 'E04|'+trim(&CliPassaporte)   // C  11   cpf
-               do 'tira_car'
-            endif
-
-            //Endereço
-            &linha = 'E05|'+trim(&CliTipoEnd)+'  '+trim(&CliEnd)                   // C  60   logradouro
-            &linha += '|'+trim(&CliEndNum)                         // C  60   numero
-            &linha += '|'+trim(&CliEndComp)                         // C  60   Complemento
-            &linha += '|'+trim(&CliEndBai)                            // C  60   Bairro
-            &linha += '|'+Padl(trim(str(&CliCidCod,7)),7,'0')  // N   7   Cod. Municipio
-            &linha += '|'+trim(&CliCidNom)                         // C  60   Nome municipio
-            &linha += '|'+trim(&CliUfCod)                          // C   2   Sigla da uf
-            &linha += '|'+trim(&CliCep)                                          // N   8 cep do Pais
-            &linha += '|'+trim(str(&CliPaiCod))                            // N   4   codigo do pais)
-            &linha += '|'+trim(&CliPaiNom)                           // C  60   Nome do pais
-            //&linha +='|'                                         // colocado esta barra pois foi comentada a linha abaixo
-            
-            if not null(&CliFone) and &CliFone <> '(  )     -    '
-               &linha += '|'+trim(&CliFone)                         // N   10   telefone   // campo opcional
-            else
-               &linha += '|'+trim(&CliCel)                         // N   10   telefone   // campo opcional
-            endif
-
-            do 'tira_car'
-            
-            if not null(&CliCnpjEndEnt) or not null(&CliCpfEndEnt)
-
-               &linha = 'G|'+trim(&CliTipoEndEnt)+'  '+trim(&CliEndEnt)  // C  60   logradouro
-               &linha += '|'+trim(&CliEndNumEnt)  // C  60   numero
-               &linha += '|'+trim(&CliEndComplEnt)  // C  60   Complemento
-               &linha += '|'+trim(&CliEndBaiEnt)     // C  60   Bairro
-               &linha += '|'+Padl(trim(str(&CliCidCodEnt,7)),7,'0')  // N   7   Cod. municipio
-               &linha += '|'+Trim(&CliCidNomEnt)  // C  60   Nome do municipio
-               &linha += '|'+trim(&CliUfCodEnt)   // C   2   Sigla da uf
-               &linha += '|'  + trim(&CliRzEndEnt)                                                          // C  60      (xNome)          Razão Social ou Nome do Recebedor
-               &linha += '|'  + trim(&cliCepEnt)                                                            // C   8      (CEP)            Código do CEP
-               &linha += '|'  + trim(str(&CliPaiCodEnt))                                                    // N   4      (cPais)          Código do País
-               &linha += '|'  + trim(&CliPaiNomEnt)                                                         // C  60      (Pais)           Nome do País         
-               &linha += '|'  + trim(&CliFoneEndEnt)                                                        // N  14      (Fone)           Telefone                    
-               &linha += '|'  + trim(&CliEmailEndEnt)                                                       // C  60      (Email)          Endereço de e-mail do Recebedor                    
-               &linha += '|'  + trim(&CliIeEndEnt)                                                          // C  14      (IE)             Inscrição Estadual do Estabelecimento Recebedor           
-
-               do 'tira_car'
-               if &CliTp2 = 'J'
-                    &linha = 'G02|'+trim(&CliCnpjEndEnt)   //   C    14       CNPJ
-                else
-                    &linha = 'G02a|'+trim(&CliCpfEndEnt)   //   C    11       CPF
-               endif
-               do 'tira_car'
-               
-
-            endif
-            //***********************************************************************************
-
-            //Pessoas autorizadas a realizar o backup do xml
-            do'Autorizações'
-
-
-       // Detalhamento de produtos e serviços - maximo 990
-
-       for each 
-           defined by NfiQtd
-
-               &PrdCod = NfiPrdCod
-               &NfiSeq = NfiSeq
-               &NfiCfopSeq = NfiCfopSeq
-               do'cfop'
-
-               &Valor = round((NfiQtd*NfiVlrUnt),2)
-            
-               if null(NfiObs)
-                  &linha = 'H|'+trim(str(NfiSeq,3))+'||'            // N   3   Numero do item   
-               else
-                  &obs = NfiObs // +' - ' +&obs.Trim()
-                  &obs = substr(&obs,1,500)
-                  &linha = 'H|'+trim(str(NfiSeq,3))+'|'+&obs.Trim()+'|'      // N   3   Numero do item   
-               endif
-
-               do 'tira_car'
-
-               &NfiPrdNcmCod = NfiPrdNcmCod
-               &NfiPrdNcmCod = strreplace(&NfiPrdNcmCod,'.','')
-               &NfiPrdNcmCod = strreplace(&NfiPrdNcmCod,' ','')
-               &NfiPrdNcmCod = strreplace(&NfiPrdNcmCod,'-','')                   
-
-               &linha = 'I|'+trim(NfiPrdCod)            // C  60    Cod. do produto ou serviço 
-
-               If Not Null(&PrdcEan)
-                    &linha += '|'+trim(&PrdcEan)             // C  14    (cEAN) GTIN (código. de barras)
-               Else
-                    &linha += '|SEM GTIN'
-               EndIf
-
-               &linha += '|'+trim(substr(NfiPrdDsc,1,100))  // C 120    Descriçao do produto
-               &linha += '|'+trim(&NfiPrdNcmCod)                                // C   8    Codigo NCM
-                
-               If null(NfiPrdNcmEx) or NfiPrdNcmEx = '00'
-                   &linha += '|'                                // C   3    EX_TIPI
-               Else
-                   &linha += '|' + trim(NfiPrdNcmEx)                               
-               EndIf
-                                  
-               &linha += '|'+trim(NfiCfopCod)                // N   4    CFOP
-               &linha += '|'+trim(NfiPrdUndCod)                   // C   6    Unidade comercial
-               &linha += '|'+trim(str(NfiQtd,15,4))         // N  12 4  Quantidade comercial
-               &linha += '|'+trim(str(NfiVlrUnt,21,10))      // N  16 4  Valor unitario de  comercializacao
-               &linha += '|'+trim(str(&Valor,15,2))         // N  15 2  Valor total bruto
-
-               If Not Null(&PrdcEanTrib)
-                    &linha += '|'+trim(&PrdcEanTrib)         // C  14    (cEANTrib)  GTIN (antigo ean) 
-               Else
-                    &linha += '|SEM GTIN'
-               EndIf
-
-               &linha += '|'+trim(NfiPrdUndCod)                   // C   6    Unidade Tributavel
-               &linha += '|'+trim(str(NfiQtd,15,4))         // N  12 4  Quant.  Tributavel 
-               &linha += '|'+trim(str(NfiVlrUnt,21,10))      // N  16 4  Valor unitario Tributavel
-
-               if NfiVlrFrete > 0
-                 &linha += '|'+trim(str(NfiVlrFrete,15,2))      // N  16 4  Valor Total do Frete
-               else 
-                 &linha += '|'
-               endif
-
-               &linha+='|' // Valor Total do Seguro
-               
-               if NfiVlrDsc > 0
-                    &linha += '|'+ trim(str(NfiVlrDsc,15,2))      // N  15 2  Valor desconto
-                    &desconto += NfiVlrDsc
-               else
-                    &linha+='|'
-               endif
-
-               if NfiOutDsp = 0
-                   &linha += '|'                                  // N 6      outras despesas
-               else
-                   &linha += '|'+trim(str(NfiOutDsp,10,2))
-               endif
-
-               &linha += '|'+trim(str(NfiIndTot))             // N  1     Indica se valor do item entra no valor total
-               &linha += '|' + trim(NfiOrdCompra)            // C  15      (xPed)           Número do Pedido de Compra
-               &linha += '|' + Trim(NfiOrdCompraSeq)              // N   6      (nItemPed)       Item do Pedido de Compra
-               &Linha += '|'+trim(NfiFCI)                     // C36      Numero do FCI
-               &Linha += '|'                                  // C6       CODIGO NVE
-                              
-               do'cest'
-               if not null(&CestCod)
-                  &Linha += '|'+&CestCod                  // C7       CODIGO CEST
-               else
-                  &Linha += '|'                               // C7       CODIGO CEST
-               endif
-
-               If not Null(NfiPrdIndEscala)
-                  &Linha += '|'+NfiPrdIndEscala.Trim()             // C1       Indicador de Escala Relevante
-               Else
-                  &Linha += '|S'
-               EndIf
-
-               if NfiPrdIndEscala = 'N'
-                  &Linha += '|'+&EmpCnpj                    // C14  CNPJ do Fabricante
-               else
-                  &Linha += '|'
-               endif
-
-               &Linha += '|'+NfiPrdBenefFiscal.Trim()               // Código de Benefício Fiscal da UF
-               &linha += '|' + &PrdCodBarras                        // C  30      (cBarra)         Código de Barras
-               &linha += '|' + &PrdCodBarras                        // C  30      (cBarraTrib)     Código de Barras Tributável
-
-               do 'tira_car'
-
-               // Produtos e Serviços / Declaração de Importação
-               for each order NfiImpSeq
-                 where NfsNum = &NfsNum
-                 where NfsSer = &NfsSer
-                 where NfiSeq = &NfiSeq
-
-                   &dataString = DtoC(NfiImpDtaDI)
-                   &dDI = '20' + substr(&dataString,7,2) + '-' + substr(&dataString,4,2) + '-' + substr(&dataString,1,2)
-
-                   &cnpj = strreplace(strreplace(strreplace(NfiImpCNPJ,'-',''),'/',''),'.','')
-
-                   &dataString = DtoC(NfiImpDtaDesemb)
-                   &dDesemb = '20' + substr(&dataString,7,2) + '-' + substr(&dataString,4,2) + '-' + substr(&dataString,1,2)
-
-                   &NfiImpSeq = NfiImpSeq                         
-
-                   &Linha  = 'I18|' + trim(NfiImpNroDI)              // C   1 - 12   (nDI)           Número do Documento de Importação (DI, D)                   
-                   &Linha += '|' + trim(&dDI)                        // D            (dDI)           Data de Registro do documento
-                   &Linha += '|' + trim(NfiImpLocDesemb)             // C   1 - 60   (xLocDesemb)    Local de desembaraço
-                   &Linha += '|' + trim(NfiImpUFDesemb)              // C   2        (UFDesemb)      Sigla da UF onde ocorreu o Desembaraço Aduaneiro
-                   &Linha += '|' + trim(&dDesemb)                    // D            (dDesemb)       Data do desembaraço aduaneiro
-                   &Linha += '|' + trim(NfiImpcExportador)           // C   1 - 60   (cExportador)   Código do Exportador
-                   &Linha += '|' + trim(str(NfiImpVlrViaTransp,2,0)) // N   2        (tpViaTransp)   Via de transporte internacional informada na Declaração de Importação (DI)
-                   &Linha += '|' + trim(str(NfiImpVlrAFRMM,13,2))    // N   13v2     (vAFRMM)        Valor da AFRMM – Adicional ao Frete para Renovação da Marinha Mercante
-                   &Linha += '|' + trim(str(NfiImpTpIntermedio,1,0)) // N   1        (tpIntermedio)  Forma de importação quanto a intermediação
-                   &Linha += '|' + trim(&cnpj)                       // N   14       (CNPJ)          CNPJ do adquirente ou do encomendante
-                   &Linha += '|' + trim(NfiImpUFTer)                 // C   2        (UFTerceiro)    Sigla da UF do adquirente ou do encomendante
-
-                   do 'tira_car'
-
-                   //Adições
-                   for each order NfiImpAdcSeq
-                     where NfsNum = &NfsNum
-                     where NfsSer = &NfsSer
-                     where NfiSeq = &NfiSeq
-                     where NfiImpSeq = &NfiImpSeq
-
-                       &Linha = 'I25|' + trim(str(NfiImpAdcNro,3))                 // N   1 - 3     (nAdicao)      Numero da Adição
-                       &Linha += '|' + trim(str(NfiImpAdcSeq,3))                   // N   1 - 3     (nSeqAdicC)    Numero sequencial do item dentro da Adição
-                       &Linha += '|' + trim(NfiImpAdcFab)                          // C   1 - 60    (cFabricante)  Código do fabricante estrangeiro
-                       &Linha += '|' + trim(str(NfiImpAdcVlrDesc,13,2))            // N   13v2      (vDescDI)      Valor do desconto do item da DI – Adição
-                       &Linha += '|' + trim(str(NfiImpAdcNroDraw,11))              // N   11        (vDraw)        Número do ato concessório de Drawback
-
-                       do 'tira_car'
-                   endfor    
-               endfor
-    
-               &NfiVlrPis = NfiVlrPis
-               &NfiVlrCOF = NfiVlrCof
-
-               &TotImp = NfiTotTribFedNac + NfiTotTribFedImp + NfiTotTribEst + NfiTotTribMun
-
-              do case              
-              case NfiCst = '10'
-                    // CST - 10 - Tributa e com cobrança do icms por substituicao tributaria
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-                    
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-                    
-                    &PerRedBc = (100 - &CfopBseIcmsSt)
-
-                    &linha = 'N03|'+trim(str(NfiPrdOriPro,1))   //   N    1       Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                  //   N    2       Tributacao do Icms no sistema esta N 1       
-                    &linha += '|'+trim(str(&CfopModBseIcms))    //   N    1       Modalidade de determinação da BC do ICMS
-                    &linha += '|'+trim(str(NfiBseClcIcms,15,2)) //   N    15  2   Valor do BC do ICMS
-                    &linha += '|'+trim(str(NfiAlqIcms,5,2))     //   N     5  2   Aliquota do imposto
-                    &linha += '|'+trim(str(NfiVlrIcms,15,2))    //   N    15  2   Valor do ICMS
-                    &linha += '|'+trim(str(&CfopModBseIcmsSt))  //   N     1      Modalidade de determinação da BC do ICMS ST
-                    &linha += '|' +trim(str(&PerSt,6,2))        //   N     5  2   Percentual da margem de valor Adicionado do ICMS ST
-
-                    if &PerRedBc > 0
-                        &linha += '|'+trim(str(&PerRedBc,6,2))  //   N     5  2   Percentual da Redução de BC do ICMS ST
-                    else 
-                        &linha += '|'                             
-                    endif
-                    &linha += '|'+trim(str(NfiBseClcSt,15,2))   //   N    15  2   Valor da BC do ICMS ST
-                    &linha += '|'+trim(str(NfiAlqSt,5,2))       //   N     5  2   Aliquota do imposto do ICMS ST
-                    &linha += '|'+trim(str(NfiVlrSt,15,2))      //   N    15  2   Valor do ICMS ST
-                    &linha += '|'                                           // N  13  2   (vBCFCP)         Valor da Base de calculo do Fundo de Combate a pobreza
-                    &linha += '|'                                           // N   3  2   (pFCP)           Percentual do Fundo de Combate a Pobreza
-                    &linha += '|'                                           // N  13  2   (vFCP)           Valor do Fundo de Combate a Pobreza
-                    &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))      // N  13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
-                    &linha += '|' + trim(str(NfiPercFCPSub,5,2))            // N   3  2   (pFCPST)         Percentual do Fundo de Combate a Pobreza retido por Substituição
-                    &linha += '|' + trim(str(NfiVlrFCPSub,15,2))            // N  13  2   (VFCPST)         Valor do Fundo de Combate a Pobreza Retido por Substituição Tributária
-                    &linha += '|'                                           // N  13  2   (vICMSSTDeson)   Valor do ICMS ST Desonerado
-                    &linha += '|'                                           // N  13  2   (MotDesICMSST)   Motivo da Desoneração do ICMS
-
-             case NfiCst = '20'
-
-                    // CST - 20 - Com reduçao de base de calculo
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-                    
-                    &PerRedBc = (100 - &CfopBseIcms) //&CfopBseIcmsSt
-
-                    &linha = 'N04|'+trim(str(NfiPrdOriPro,1))        //   N     1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                       //   N     2      Tributacao do Icms         
-                    &linha += '|'+trim(str(&CfopModBseIcms))         //   N     1      Modalidade de determinação da BC do ICMS)
-
-                    if &PerRedBc > 0
-                     &linha += '|'+trim(str(&PerRedBc,6,2))          //   N     5  2   Percentual da redução de BC   NfiPerRedBc
-                    else
-                     &linha += '|0.00'
-                    endif
-
-                    &linha += '|'+trim(str(NfiBseClcIcms,15,2))      //   N    15  2   Valor do BC do ICMS
-                    &linha += '|'+trim(str(NfiAlqIcms,5,2))          //   N     5  2   Aliquota do imposto
-                    &linha += '|'+trim(str(NfiVlrIcms,15,2))         //   N    15  2   Valor do ICMS
-                    &linha += '|'+trim(str(NfiIcmsDes,10,2))         //   N    15 2   Valor do ICMS desonerado
-                    &linha += '|'+trim(&CfopMotDesoneracao)          //   N    1      Motivo desoneração 
-                    &linha += '|'                                    //   N   13  2   (vBCFCP)         Valor da Base de Calculo do Fundo de Combate a pobreza
-                    &linha += '|'                                    //   N    3  2   (pFCP)           Percentual do Fundo de Combate a Pobreza
-                    &linha += '|'                                    //   N   13  2   (vFCP)           Valor do Fundo de Combate a Pobreza
-
-            case NfiCst = '30'
-
-                    // CST - 30 - Isenta ou não tributada e c/ cobrança ICMS por S.T'
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &PerRedBc = (100 - &CfopBseIcmsSt)
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N05|'+trim(str(NfiPrdOriPro,1))           //   N    1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                          //   N    2      Tributacao do Icms        
-                    &linha += '|'+trim(str(&CfopModBseIcmsSt))          //   N    1      Modalidade de determinação da BC do ICMS CST
-                    &linha += '|'                                       //   N    5  2   Percentual da Margem de valor Adicionado do ICMS ST
-
-                    if &PerRedBc > 0
-                        &linha += '|'+trim(str(&PerRedBc,6,2))              //   N     5  2   Percentual da Redução de BC do ICMS ST
-                    else 
-                        &linha += '|0.00'                            
-                    endif 
-
-                    &linha += '|'+trim(str(NfiBseClcSt,15,2))           //   N   15  2   Valor da BC do ICMS ST
-                    &linha += '|'+trim(str(NfiAlqSt,5))                 //   N    5  2   Aliquota do imposto do ICMS ST
-                    &linha += '|'+trim(str(NfiVlrSt,15,2))              //   N   15  2   Valor do ICMS ST 
-                    &linha += '|'+trim(str(NfiIcmsDes,10,2))            //   N    15 2   Valor do ICMS desonerado
-                    &linha += '|'+trim(&CfopMotDesoneracao)             //   N    1      Motivo desoneração 
-                    &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))  //   N  13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
-                    &linha += '|' + trim(str(NfiPercFCPSub,5,2))        //   N   3  2   (pFCPST)         Percentual do Fundo de Combate a Pobreza retido por Substituição
-                    &linha += '|' + trim(str(NfiVlrFCPSub,15,2))        //   N  13  2   (VFCPST)         Valor do Fundo de Combate a Pobreza Retido por Substituição Tributária
-
-             case NfiCst = '40' // CST - 40 - Isenta, 41-Nao Tributada e 50- Suspensao
-
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext() 
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N06|'+trim(str(NfiPrdOriPro,1))              //   N    1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                             //   N    2      Tributacao do Icms 
-                    &linha += '|'+trim(str(NfiIcmsDes,10,2))               //   N    15 2   Valor do ICMS desonerado
-                    &linha += '|'+trim(&CfopMotDesoneracao)                //   N    1      Motivo desoneração 
-  
-             case NfiCst = '41' 
-
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N06|'+trim(str(NfiPrdOriPro,1))              //   N    1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                             //   N    2      Tributacao do Icms  
-                    &linha += '|'+trim(str(NfiIcmsDes,10,2))               //   N    15 2   Valor do ICMS desonerado
-                    &linha += '|'+trim(&CfopMotDesoneracao)                //   N    1      Motivo desoneração 
-
-             case NfiCst = '50'
-                    
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext() 
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N06|'+trim(str(NfiPrdOriPro,1))              //   N    1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                             //   N    2      Tributacao do Icms  
-                    &linha += '|'+trim(str(NfiIcmsDes,10,2))               //   N    15 2   Valor do ICMS desonerado
-                    &linha += '|'+trim(&CfopMotDesoneracao)                //   N    1      Motivo desoneração  
-                         
-             case NfiCst = '51'
-                    // CST - 51- Diferimento
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &PerRedBc = (100 - &CfopBseIcms)
-
-                    &linha = 'N07|'+trim(str(NfiPrdOriPro,1))  //   N     1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                 //   N     2      Tributacao do Icms         
-                    &linha += '|'+trim(str(&CfopModBseIcms))   //   N    1      Modalidade de determinação da BC do ICMS
-
-                    if NfiPerRedBc > 0
-                        &linha += '|'+trim(str(NfiPerRedBc,6,2))    //   N     5  2   Percentual da Redução de BC do ICMS
-                    else 
-                        &linha += '|0.00'                           //   N     5  2   Percentual da Redução de BC do ICMS
-                    endif
-
-                    if NfiBseClcIcmsInt > 0
-                       &linha += '|'+trim(str(NfiBseClcIcms,15,2))   //   N     15 2 Valor da BC do ICMS 
-                    else
-                       &linha += '|0.00'
-                    endif
-
-                    if NfiAlqIcms > 0
-                       &linha += '|'+trim(str(NfiAlqIcms,15,2))         //   N     5 2 Aliquota do Imposto
-                    else
-                       &linha += '|0.00'
-                    endif
-
-                    if NfiVlrIcms > 0
-                       &linha += '|'+trim(str(NfiVlrIcms,15,2))         //   N     15 2 Valor do ICMS 
-                    else
-                       &linha += '|0.00'
-                    endif
-
-                    if NfiVlrIcmsDiferimento > 0
-                       &linha += '|'+trim(str(NfiVlrIcmsDiferimento,15,2))     //   N     15 2 Valor do ICMS da Operação
-                    else
-                       &linha += '|0.00'
-                    endif
-
-                    if NfiPerDiferimento > 0
-                       &linha += '|'+trim(str(NfiPerDiferimento,15,2))         //   N     15  2 % do Diferimento
-                    else
-                       &linha += '|100.00'
-                    endif
-
-                    if NfiVlrDiferimento > 0
-                       &linha += '|'+trim(str(NfiVlrDiferimento,15,2))         //   N     15  2 valor do ICMS Diferido
-                    else
-                       &linha += '|0.00'
-                    endif
-
-                    &linha += '|'                                    // N  13  2   (vBCFCP)         Valor da Base de Calculo do Fundo de Combate a pobreza
-                    &linha += '|'                                    // N   3  2   (pFCP)           Percentual do Fundo de Combate a Pobreza
-                    &linha += '|'                                    // N  13  2   (vFCP)           Valor do Fundo de Combate a Pobreza
-                    &linha += '|'                                    // N  13  2   (pFCPDif)        Percentual do Diferimento referente ao FCP
-                    &linha += '|'                                    // N  13  2   (vFCPDif)        Valor do Diferimento referente ao FCP
-                    &linha += '|'                                    // N  13  2   (vFCPEfet)       Valor Efetivo do ICMS Referente ao FCP                    
-
-             case NfiCst = '60'
-                    // CST - 60- Icms cobrado por substituicao tributaria
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha  = 'N08|'+trim(str(NfiPrdOriPro,1))          // N       1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                          // N       2      Tributacao do Icms                           
-                    &linha += '|'+trim(str(NfiBseClcSt060,15,2))        // N      15  2 (vBCSTRet)       Valor do BC do ICMS ST
-                    &linha += '|'+trim(str(NfiVlrSt060 ,15,2))          // N      15  2 (vICMSSTRet)     Valor do ICMS ST
-                    &linha += '|'+trim(str(NfiAliqSt060 ,6,2))          // N       3  2 (pST)            Alíquota suportada pelo Consumidor Final
-                    &linha += '|'+trim(str(NfiVlrBseClcFcpStRet ,15,2)) // N      13  2 (vBCFCPSTRet)    Valor da Base de Cálculo do FCP retido anteriormente por ST
-                    &linha += '|'+trim(str(NfiPercFcpStRet ,6,2))       // N       3  2 (pFCPSTRet)      Valor da Base de Cálculo do FCP retido anteriormente por ST
-                    &linha += '|'+trim(str(NfiVlrFcpStRet ,15,2))       // N      13  2 (vFCPSTRet)      Valor do FCP retido por Substituição Tributária
-                    &linha += '|'+trim(str(NfiPerRedBc ,15,2))          // N      13  2 (pRedBCEfet)     Percentual de Redução da BC Efetiva
-                    &linha += '|'+trim(str(NfiVlrBseClcIcmsEfet ,15,2)) // N      13  2 (vBCEfet)        Valor da base de cálculo efetiva
-                    &linha += '|'+trim(str(NfiPercIcmsEfet ,6,2) )      // N       3  2 (pICMSEfet)      Alíquota do ICMS efetiva
-                    &linha += '|'+trim(str(NfiVlrIcmsEfet ,15,2))       // N      13  2 (vICMSEfet)      Valor do ICMS efetivo
-                    &linha += '|'+trim(str(NfiVlrIcmsSubstituto ,15,2)) // N      13  2 (vICMSSubstituto)Valor do ICMS próprio do Substituto
-    
-             case NfiCst = '70'
-                      // CST - 70 - Com reduçao de base de calculo e cobrança do icms por subs. tributaria
-                    
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-                    
-                    &PerRedBc = (100 - &CfopBseIcms)
-
-                    &linha  = 'N09|'+trim(str(NfiPrdOriPro,1))              //origem da mercadoria 
-                    &linha += '|'+trim(NfiCst)                              //   N    2      Tributacao do Icms 
-                    &linha += '|'+trim(str(&CfopModBseIcms))                //   N    1      Modalidade de determinação da BC do ICMS 
-
-                    if &PerRedBc > 0
-                    &linha += '|'+trim(str(&PerRedBc,6,2))                  //   N     5  2    Percentual de reduçao da bc
-                     else 
-                        &linha += '|0.00'                             
-                    endif  
-
-                    &linha += '|'+trim(str(NfiBseClcIcms,15,2))             //   N   15  2   Valor da BC do ICMS 
-                    &linha += '|'+trim(str(NfiAlqIcms,5,2))                 //   N    5  2   Aliquota do imposto  
-                    &linha += '|'+trim(str(NfiVlrIcms,15,2))                //   N   15  2   Valor do ICMS         
-                    &linha += '|'+trim(str(&CfopModBseIcmsSt))              //   N    1      Modalidade de determinação da BC do ICMS ST
-                    &linha += '|'+TRIM(str(&PerSt,6,2))                     //   N    5  2   Percentual da Margem de valor Adicionado do ICMS ST(MVA)
-
-                    &PerRedBc = (100 - &CfopBseIcmsST)
-
-                    if &PerRedBc > 0
-                    &linha += '|'+trim(str(&PerRedBc,6,2))                  //   N     5  2    Percentual da Redução de BC do ICMS ST
-                     else 
-                        &linha += '|0.00'                              
-                    endif  
-
-                    &linha += '|'+trim(str(NfiBseClcSt,15,2))               //   N   15  2   Valor da C do ICMS ST
-                    &linha += '|'+trim(str(NfiAlqSt,5,2))                   //   N    5  2   Aliquota do imposto do ICMS ST  
-                    &linha += '|'+trim(str(NfiVlrSt,15,2))                  //   N   15  2   Valor do ICMS ST 
-                    &linha += '|'+trim(str(NfiIcmsDes,10,2))                //   N    15 2   Valor do ICMS desonerado
-                    &linha += '|'+trim(&CfopMotDesoneracao)                 //   N    1      Motivo desoneração  
-                    &linha += '|'                                           //   N  13  2   (vBCFCP)         Valor da Base de calculo do Fundo de Combate a pobreza
-                    &linha += '|'                                           //   N   3  2   (pFCP)           Percentual do Fundo de Combate a Pobreza
-                    &linha += '|'                                           //   N  13  2   (vFCP)           Valor do Fundo de Combate a Pobreza
-                    &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))      //   N  13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
-                    &linha += '|' + trim(str(NfiPercFCPSub,5,2))            //   N   3  2   (pFCPST)         Percentual do Fundo de Combate a Pobreza retido por Substituição
-                    &linha += '|' + trim(str(NfiVlrFCPSub,15,2))            //   N  13  2   (VFCPST)         Valor do Fundo de Combate a Pobreza Retido por Substituição Tributária
-                    &linha += '|'                                           //   N   3  2   (vICMSSTDeson)   Valor do ICMS ST Desonerado
-                    &linha += '|'                                           //   N  13  2   (MotDesICMSST)   Motivo da Desoneração do ICMS
-
-            case NfiCst = '90'
-                    // CST - 90 - Outros
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                   // Icms 'N|'
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &PerRedBc = ( 100 - &CfopBseIcms)
-
-                    &linha  = 'N10|'+trim(str(NfiPrdOriPro,1))              //   N    1      Origem da Mercadoria
-                    &linha += '|'+trim(NfiCst)                              //   N    2      Tributacao do Icms        
-                    &linha += '|'+trim(str(&CfopModBseIcms))                //   N    1      Modalidade de determinação da BC do ICMS
-
-                    if &PerRedBc > 0 
-                        &linha += '|'+trim(str(&PerRedBc,6,2))              //   N    5  2   Percentual de reduçao da bc
-                    else 
-                        &linha += '|0.00'                                 
-                    endif
-
-                    &linha += '|'+trim(str(NfiBseClcIcms,15,2))             //   N   15  2   Valor da BC do ICMS                     
-                    &linha += '|'+trim(str(NfiAlqIcms,5,2))                 //   N    5  2   Aliquota do imposto  
-                    &linha += '|'+trim(str(NfiVlrIcms,15,2))                //   N   15  2   Valor do ICMS         
-                    &linha += '|'+trim(str(&CfopModBseIcmsSt))              //   N    1      Modalidade de determinação da BC do ICMS ST                                        
-                    &linha += '|'+TRIM(str(&PerSt,6,2))                     //   N    5  2   Percentual da Margem de valor Adicionado do ICMS ST
-
-                    &PerRedBc = (100 - &CfopBseIcmsST)
-
-                    if &PerRedBc > 0 
-                        &linha += '|'+trim(str(&PerRedBc,5,2))              //   N    5  2   Percentual da Redução de BC do ICMS ST  
-                    else 
-                        &linha += '|0.00'                                 
-                    endif
-                   
-                   &linha += '|'+trim(str(NfiBseClcSt,15,2))                //   N   15  2   Valor da C do ICMS ST
-                   &linha += '|'+trim(str(NfiAlqSt,5,2))                    //   N    5  2   Aliquota do imposto do ICMS ST
-                   &linha += '|'+trim(str(NfiVlrSt,15,2))                   //   N   15  2   Valor do ICMS ST  
-                   &linha += '|'+trim(str(NfiIcmsDes,10,2))                 //   N    15 2   Valor do ICMS desonerado
-                   &linha += '|'+trim(&CfopMotDesoneracao)                  //   N    1      Motivo desoneração                       
-                   &linha += '|'                                            //   N  13  2   (vBCFCP)         Valor da Base de calculo do Fundo de Combate a pobreza
-                   &linha += '|'                                            //   N   3  2   (pFCP)           Percentual do Fundo de Combate a Pobreza
-                   &linha += '|'                                            //   N  13  2   (vFCP)           Valor do Fundo de Combate a Pobreza
-                   &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))       //   N  13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
-                   &linha += '|' + trim(str(NfiPercFCPSub,5,2))             //   N   3  2   (pFCPST)         Percentual do Fundo de Combate a Pobreza retido por Substituição
-                   &linha += '|' + trim(str(NfiVlrFCPSub,15,2))             //   N  13  2   (VFCPST)         Valor do Fundo de Combate a Pobreza Retido por Substituição Tributária
-                   &linha += '|'                                            //   N   3  2   (vICMSSTDeson)   Valor do ICMS ST Desonerado
-                   &linha += '|'                                            //   N  13  2   (MotDesICMSST)   Motivo da Desoneração do ICMS
-
-            case NfiCst = '00'
-                    // CST - 00 - Tributada integralmente
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N02|'+trim(str(NfiPrdOriPro,1))       //   N    1      Origem da Mercadoria
-                    &linha += '|'+Padl(trim(NfiCst),2,'0')          //   N    2      Tributação do ICMS: 00 - Tributada Integralmente                    
-                    &linha += '|'+trim(str(&CfopModBseIcms))        //   N    1      Modalidade de determinação da BC do ICMS                    
-                    &linha += '|'+trim(str(NfiBseClcIcms,15,2))     //   N    15  2  Valor da BC do ICMS
-                    &linha += '|'+trim(str(NfiAlqIcms,5,2))         //   N     5  2  Aliquota do imposto 
-                    &linha += '|'+trim(str(NfiVlrIcms,15,2))        //   N    15  2  Valor do ICMS
-                    &linha += '|'                                   //   N    3  2   (pFCP)           Percentual do Fundo de Combate a Pobreza
-                    &linha += '|'                                   //   N   13  2   (vFCP)           Valor do Fundo de Combate a Pobreza
- 
-           case NfiCst ="101"       
-
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N10c|'+trim(str(NfiPrdOriPro,1))                                    //   N    1      Origem da Mercadoria 
-                    &linha += '|'+Padl(trim(NfiCst),3,'0')                            //   N    2      Tributação do ICMS: 101
-                    &linha += '|'+trim(str(&EmpPerCredIcms,5,2))                    //   N    5  2   Aliquota aplicavel de caclulo de crédito                   
-                    &linha += '|' + trim(str(NfiVlrCredIcms ,15,2))                 //   N   15 2   Valor crédito do ICMS que pode ser aproveitado                                                        
-              
-        
-           case NfiCst ="102" or NfiCst ="103" or NfiCst ="300" or NfiCst ="400" // SEM NENHUMA CONTA
-
-
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N10d|'+trim(str(NfiPrdOriPro,1))                             //   N    1      Origem da Mercadoria
-                    &linha += '|'+Padl(trim(NfiCst),3,'0')                     //   N    2      Tributação do ICMS: 102,103,300,400
-
-
-          case NfiCst = "201" // COM CALCULO D SUBS TRIBUTÁRIA 
-
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N10e|'+trim(str(NfiPrdOriPro,1))          //   N    1      Origem da Mercadoria 
-                    &linha += '|'+Padl(trim(NfiCst),3,'0')              //   N    2      Tributação do ICMS: 201
-                    &linha += '|'+trim(str(&CfopModBseIcmsSt))          //   N    1      Modalidade de determinação da BC do ICMS ST
-                    &linha += '|'+TRIM(str(&PerSt,6,2))                 //   N    5  2   Percentual da Margem de valor Adicionado do ICMS ST(MVA)
-                    &linha += '|'                                       //   N    5  2   Percentual da Redução de BC do ICMS ST 
-                    &linha += '|'+trim(str(NfiBseClcSt,15,2))           //   N    15 2   Valor da BC do ICMS ST
-                    &linha += '|'+trim(str(NfiAlqSt,5,2))               //   N     5 2   Aliquota do imposto do ICMS ST
-                    &linha += '|'+trim(str(NfiVlrSt,15,2))              //   N    15 2   Valor do ICMS ST
-                    &linha += '|'+trim(str(&EmpPerCredIcms,5,2))        //   N    5  2   Aliquota aplicavel de caclulo de crédito                   
-                    &linha += '|' + trim(str(NfiVlrCredIcms ,15,2))     //   N   15 2   Valor crédito do ICMS que pode ser aproveitado                                                        
-                    &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))  //   N   13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
-                    &linha += '|' + trim(str(NfiPercFCPSub,5,2))        //   N    3  2   (pFCPST)         Percentual do Fundo de Combate a Pobreza retido por Substituição
-                    &linha += '|' + trim(str(NfiVlrFCPSub,15,2))        //   N   13  2   (VFCPST)         Valor do Fundo de Combate a Pobreza Retido por Substituição Tributária
-
-                       
-          case NfiCst ="202" or NfiCst ="203"  // COM CALCULO D SUBS TRIBUTÁRIA  
-                        
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext() 
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N10f|'+trim(str(NfiPrdOriPro,1))          //   N    1      Origem da Mercadoria
-                    &linha += '|'+Padl(trim(NfiCst),3,'0')              //   N    2      Tributação do ICMS: 202,203
-                    &linha += '|'+trim(str(&CfopModBseIcmsSt))          //   N    1      Modalidade de determinação da BC do ICMS ST
-                    &linha += '|'+TRIM(str(&PerSt,6,2))                 //   N    5  2   Percentual da Margem de valor Adicionado do ICMS ST(MVA)
-                    &linha += '|'                                       //   N    5  2   Percentual da Redução de BC do ICMS ST 
-                    &linha += '|'+trim(str(NfiBseClcSt,15,2))           //   N    15 2   Valor da BC do ICMS ST
-                    &linha += '|'+trim(str(NfiAlqSt,5,2))               //   N     5 2   Aliquota do imposto do ICMS ST
-                    &linha += '|'+trim(str(NfiVlrSt,15,2))              //   N    15 2   Valor do ICMS ST
-                    &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))  //   N   13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
-                    &linha += '|' + trim(str(NfiPercFCPSub,5,2))        //   N    3  2   (pFCPST)         Percentual do Fundo de Combate a Pobreza retido por Substituição
-                    &linha += '|' + trim(str(NfiVlrFCPSub,15,2))        //   N   13  2   (VFCPST)         Valor do Fundo de Combate a Pobreza Retido por Substituição Tributária                   
-                     
-        
-          case NfiCst ="500" // ST COBRADA ANTERIORMENTE
-
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N10g|'+trim(str(NfiPrdOriPro,1))              // N     1     Origem da Mercadoria 
-                    &linha += '|'+Padl(trim(NfiCst),3,'0')                  // N     2     Tributação do ICMS: 500
-                    &linha += '|'+trim(str(NfiBseClcSt060,15,2))        // N      15  2 (vBCSTRet)       Valor do BC do ICMS ST
-                    &linha += '|'+trim(str(NfiVlrSt060 ,15,2))          // N      15  2 (vICMSSTRet)     Valor do ICMS ST
-                    &linha += '|'+trim(str(NfiAliqSt060 ,6,2))          // N       3  2 (pST)            Alíquota suportada pelo Consumidor Final
-                    &linha += '|'+trim(str(NfiVlrBseClcFcpStRet ,15,2)) // N      13  2 (vBCFCPSTRet)    Valor da Base de Cálculo do FCP retido anteriormente por ST
-                    &linha += '|'+trim(str(NfiPercFcpStRet ,6,2))       // N       3  2 (pFCPSTRet)      Valor da Base de Cálculo do FCP retido anteriormente por ST
-                    &linha += '|'+trim(str(NfiVlrFcpStRet ,15,2))       // N      13  2 (vFCPSTRet)      Valor do FCP retido por Substituição Tributária
-                    &linha += '|'+trim(str(NfiPerRedBc ,15,2))          // N      13  2 (pRedBCEfet)     Percentual de Redução da BC Efetiva
-                    &linha += '|'+trim(str(NfiVlrBseClcIcmsEfet ,15,2)) // N      13  2 (vBCEfet)        Valor da base de cálculo efetiva
-                    &linha += '|'+trim(str(NfiPercIcmsEfet ,6,2) )      // N       3  2 (pICMSEfet)      Alíquota do ICMS efetiva
-                    &linha += '|'+trim(str(NfiVlrIcmsEfet ,15,2))       // N      13  2 (vICMSEfet)      Valor do ICMS efetivo
-                    &linha += '|'+trim(str(NfiVlrIcmsSubstituto ,15,2)) // N      13  2 (vICMSSubstituto)Valor do ICMS próprio do Substituto
- 
-        
-          case NfiCst="900" // VARIOS CAMPO - DE PERC DE CREDITO - ST
-                        
-                    if not null(&TotImp)
-                        &linha = 'M|'+trim(str(&TotImp,10,2))+'|'
-                    else
-                        &linha = 'M|'
-                    endif
-
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &linha = 'N|'
-                    &ret = DFWPTxt(&Linha,1000)
-                    &ret = DFWNext()
-
-                    &PerRedBc = ( 100 - &CfopBseIcms)
-
-                    &linha = 'N10h|'+trim(str(NfiPrdOriPro,1))         //   N    1      Origem da Mercadoria  
-                    &linha += '|'+Padl(trim(NfiCst),3,'0')             //   N    2      Tributação do ICMS: 900
-                    &linha += '|'+trim(str(&CfopModBseIcms))           //   N    1      Modalidade de determinação da BC do ICMS                    
-                    &linha += '|'+trim(str(NfiBseClcIcms,15,2))        //   N   15  2   Valor da BC do ICMS ST
-
-                    if &PerRedBc > 0
-                        &linha += '|'+trim(str(&PerRedBc,6,2))         //   N    5  2   Percentual da Redução de BC do ICMS  
-                    else 
-                        &linha += '|0.00'                                                      
-                    endif  
-
-                    &linha += '|'+trim(str(NfiAlqIcms ,5,2))           //   N    5  2   Aliquota do imposto do ICMS
-                    &linha += '|'+trim(str(NfiVlrIcms,15,2))           //   N   15  2   Valor do ICMS      
-                    &linha += '|'+trim(str(&CfopModBseIcmsSt))         //   N    1      Modalidade de determinação da BC do ICMS ST
-                    
-                    if &PerSt > 0
-                         &linha += '|'+TRIM(str(&PerSt,6,2))           //   N    5  2   Percentual da Margem de valor Adicionado do ICMS ST(MVA) 
-                    else
-                         &linha += '|0.00'                                                          
-                    endif
-
-                    &PerRedBc = ( 100 - &CfopBseIcmsST)
-                    
-                    if &PerRedBc > 0
-                        &linha += '|'+trim(str(&PerRedBc,6,2))         //   N    5  2   Percentual da Redução de BC do ICMS ST 
-                    else 
-                        &linha += '|0.00'  
-                    endif  
-
-                   &linha += '|'+trim(str(NfiBseClcSt,15,2))           //   N    15 2   Valor da BC do ICMS ST
-                   &linha += '|'+trim(str(NfiAlqSt,5,2))               //   N     5 2   Aliquota do imposto do ICMS ST
-                   &linha += '|'+trim(str(NfiVlrSt,15,2))              //   N    15 2   Valor do ICMS ST
-                   &linha += '|'+trim(str(&EmpPerCredIcms,5,2))        //   N    5  2   Aliquota aplicavel de caclulo de crédito                   
-                   &linha += '|' + trim(str(NfiVlrCredIcms ,15,2))     //   N   15 2   Valor crédito do ICMS que pode ser aproveitado                                                        
-                   &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))  //   N   13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
-                   &linha += '|' + trim(str(NfiPercFCPSub,5,2))        //   N    3  2   (pFCPST)         Percentual do Fundo de Combate a Pobreza retido por Substituição
-                   &linha += '|' + trim(str(NfiVlrFCPSub,15,2))        //   N   13  2   (VFCPST)         Valor do Fundo de Combate a Pobreza Retido por Substituição Tributária                   
-
-            endcase
-            do 'tira_car'
-
-            if NfiVlrBseIcmsDest > 0
-            
-                &Linha = 'NA01|'+trim(str(NfiVlrBseIcmsDest,10,2))              // N    15  2  (vBCUFDest)     Valor da Base de calculo de Icms na UF destino 
-                &Linha += '|'+trim(str(NfiPerFCP,10,2))                         // N     6  2  (pFCPUFDest)    Percentual do ICMS relativo ao Fundo de Cpmbate a Pobreza (FCP) na UF de destino
-                &Linha += '|'+trim(str(NfiAlqInter,10,2))                       // N     6  2  (pICMSUFDest)   Aliquota interna da UF de destino
-                &Linha += '|'+trim(str(NfiAlqIcms,10,2))                        // N     6  2  (pICMSInter)    Aliquota interestadual das UF envolvidas
-    
-                do case                                                         // N     6  2  (pICMSInterPart)Percentual provisorio de partilha do ICMS Interestadual
-                   case year(&Today) = 2015 or year(&Today) = 15                
-                        &Linha += '|40'
-                   case year(&Today) = 2016 or year(&Today) = 16 
-                        &Linha += '|40'
-                   case year(&Today) = 2017 or year(&Today) = 17
-                        &Linha += '|60'
-                   case year(&Today) = 2018 or year(&Today) = 18
-                        &Linha += '|80'
-                   OtherWise
-                        &Linha += '|100'
-                endcase
-    
-                &Linha += '|'+trim(str(NfiVlrFCP,10,2))                         // N    15  2  (vFCPUFDest)    Valor do ICMS relativo ao Fundo de Combate a Pobreza (FCP) da UF de destino
-                &Linha += '|'+trim(str(NfiVlrIcmsDest,10,2))                    // N    15  2  (vICMSUFDest)   Valor do icms interestadual para a UF de destino           
-                &Linha += '|'+trim(str(NfiVlrIcmsOri,10,2))                     // N    15  2  (vICMSUFRemet)  Valor do icms interestadual para a UF do remetente
-
-                If NfiVlrFCP > 0
-                    &linha += '|'   + trim(str(NfiVlrBseIcmsDest,15,2))         // N    13  2  (vBCFUFDest)    Valor da Base de Cálculo do Fundo de Combate a Pobreza na UF de destino
-                else
-                    &linha += '|0.00'
-                endif                
-                
-                do 'tira_car'
-            
-            endif
-
-            // IPI 
-            If NfiCstIpi =  '00' or NfiCstIpi = '49' or NfiCstIpi = '50' or NfiCstIpi = '99' 
-                    
-                  &linha = 'O|'
-
-                  if null(&CfopEnqCod)
-                     &linha += '||||999'
-                  else
-                     &linha += '||||'+&CfopEnqCod
-                  endif
-
-                  do 'tira_car'
-                  &linha = 'O07|'+trim(NfiCstIpi)              //   C    2       Cod. situacao trib. do IPI
-                  &linha += '|'+trim(str(NfiVlrIpi,15,2))           //   N   15  2    Valor do IPI
-                  do 'tira_car'
-
-                  If NfiVlrIpi > 0
-                     // &linha = 'O10|'+trim(str(NfiTotPrd,15,2))   //   N   15  2    Valor da base de calc. do IPI // Alterado dia 21/12/2017: Base do IPI está sem o desconto, frete, acréscimo
-                     &linha = 'O10|'+trim(str(NfiBseClcIPI ,15,2))   //   N   15  2    Valor da base de calc. do IPI
-                  else
-                     &linha = 'O10|0.00'                             //   N   15  2    Valor da base de calc. do IPI
-                  endif
-
-                  &linha += '|'+trim(str(NfiAlqIpi,15,2))           //   N    5  2    Aliquota do IPI
-                  do 'tira_car'
-                     
-            else
-               
-                  &linha = 'O|'
-
-                  if null(&CfopEnqCod)
-                     &linha += '||||999'
-                  else
-                     &linha += '||||'+&CfopEnqCod
-                  endif
-
-                  do 'tira_car'
-                  &linha = 'O08|'+trim(NfiCstIpi)                //   C     2      Cod. situacao trib. do IPI  
-                  do 'tira_car'
-
-            endif
-              
-            //P Grupo P – Imposto de Importação
-            &linha = 'P|' + trim(str(NfiIVlrBCImp,13,2))         // N   13v 2    (vBC)         Valor BC do Imposto de Importação
-            &Linha += '|' + trim(str(NfiVlrDespAdu,13,2))        // N   13v 2    (vDespAdu)    Valor despesas aduaneiras
-            &Linha += '|' + trim(str(NfiVlrII,13,2))             // N   13v 2    (vII)         Valor Imposto de Importação
-            &Linha += '|' + trim(str(NfiVlrIOF,13,2))            // N   13v 2    (vIOF)        Valor Imposto sobre Operações Financeiras
-
-            &ret = DFWPTxt(&Linha,1000)
-            &ret = DFWNext()            
-               
-            // PIS - GRUPO de Pis tributado pela aliquota
-            do case
-               case NfiCstPis = '01' or NfiCstPis = '02'
-                  
-                  &linha = 'Q|'         
-                  &ret = DFWPTxt(&Linha,1000)
-                  &ret = DFWNext() 
-
-                  &linha = 'Q02|'+NfiCstPis                //   N      2         Codigo da Situação Tributaria do PIS       
-
-                  if NfiAlqPis > 0
-                     // &linha += '|'+trim(str(NfiTotPrd,15,2))   //   N     15 2       Valor da Base de Calculo do PIS // Alterado dia 21/12/2017: Base do PIS está sem o desconto, frete, acréscimo
-                     &linha += '|'+trim(str(NfiBseClcPIS ,15,2))   //   N     15 2       Valor da Base de Calculo do PIS
-                     &linha += '|'+trim(str(NfiAlqPis,5,2))         //   N      5 2       Aliquota do PIS(em percentual)
-                     &linha += '|'+trim(str(NfiVlrPis,15,2))         //   N     15 2       Valor do PIS
-                     do 'tira_car'
-                  else
-                     &linha += '|0.00'                              //   N     15 2       Valor da Base de Calculo do PIS
-                     &linha += '|0.00'                               //   N      5 2       Aliquota do PIS(em percentual)
-                     &linha += '|0.00'                                //   N     15 2       Valor do PIS
-                     do 'tira_car'
-                  endif
-
-               // Grupo de Pis tributado por quantidade
-               case NfiCstPis = '03'
-                  
-                  &linha = 'Q|'         
-                  &ret = DFWPTxt(&Linha,1000)
-                  &ret = DFWNext() 
-                  &linha = 'Q03|'+'03'                            //   N      2         Codigo da Situação Tributaria do PIS
-                  &linha += '|'+trim(str(NfiQtd,16,4))            //   N     16 4       Quatidade Vendida   
-                  &linha += '|0.00'
-                  &linha += '|'+trim(str(NfiVlrPis,15,2))         //   N     15 2       Valor do PIS   
-                  do 'tira_car'
-
-               // Grupo de Pis nao tributado 
-               case NfiCstPis = '04' or NfiCstPis = '06' or NfiCstPis = '07' or NfiCstPis = '08' or NfiCstPis = '09'
-                  &linha = 'Q|'         
-                  &ret = DFWPTxt(&Linha,1000)
-                  &ret = DFWNext()
-                  &linha = 'Q04|'+NfiCstPis                 //   N      2         Codigo da Situação Tributaria do PIS
-                  &ret = DFWPTxt(&Linha,1000)
-                  &ret = DFWNext()
-
-               // Grupo de Pis outras operacoes
-               otherwise
-
-                   &linha = 'Q|'         
-                   &ret = DFWPTxt(&Linha,1000)
-                   &ret = DFWNext()
-                   &linha = 'Q05|'+NfiCstPis                         //   N      2         Codigo da Situação Tributaria do PIS
-                   &linha += '|'+trim(str(NfiVlrPis,15,2))         //   N      15 2      Valor do PIS                   
-                   do 'tira_car'
-                  
-
-                  if NfiAlqPis > 0
-                     // &linha = 'Q07|'+trim(str(NfiTotPrd,15,2))   //   N     15 2       Valor da Base de Calculo do PIS // Alterado dia 21/12/2017: Base do PIS está sem o desconto, frete, acréscimo
-                     &linha = 'Q07|'+trim(str(NfiBseClcPIS ,15,2))   //   N     15 2       Valor da Base de Calculo do PIS
-                     &linha += '|'+trim(str(NfiAlqPis,5,2))          //   N     5 2       Aliquota do PIS(percentual)  
-                     do 'tira_car'
-                  else
-                     &linha = 'Q07|0.00'                               //   N     15 2       Valor da Base de Calculo do PIS
-                     &linha += '|0.00'                                //   N     5 2       Aliquota do PIS(percentual)  
-                     do 'tira_car'
-                  endif
-                                         
-            endcase
-              
-
-            // Grupo de COFINS tributado pela aliquota
-            do case
-                case NfiCstCof = '01' or NfiCstCof = '02'
-                   &linha = 'S|'
-                   &ret = DFWPTxt(&Linha,1000)
-                   &ret = DFWNext()
-    
-                   &linha = 'S02|'+NfiCstCof.Trim()                  //   N     2           Codigo de Situação Tributaria do COFINS     
-    
-                   if NfiAlqCof > 0
-                      // &linha += '|'+trim(str(NfiTotPrd,15,2))    //   N     15  2       Valor da Base de Calculo da COFINS // Alterado dia 21/12/2017: Base do COFINS está sem o desconto, frete, acréscimo
-                      &linha += '|'+trim(str(NfiBseClcCOFINS ,15,2))    //   N     15  2       Valor da Base de Calculo da COFINS
-                      &linha += '|'+trim(str(NfiAlqCof,5,2))          //   N     5   2       Aliquota da COFINS(Percentual)
-                      &linha += '|'+trim(str(NfiVlrCof,15,2))          //   N     15  2       Valor do COFINS
-                      do 'tira_car'
-                   else
-                      &linha += '|0.00'                                //   N     15  2       Valor da Base de Calculo da COFINS
-                      &linha += '|0.00'                                //   N     5   2       Aliquota da COFINS(Percentual)
-                      &linha += '|0.00'                                //   N     15  2       Valor do COFINS
-                      do 'tira_car'
-                   endif
-               
- 
-                 // Grupo de Cofins tributado por QTDE
-                 case NfiCstCof = '03'
-                       &linha = 'S|'
-                       &ret = DFWPTxt(&Linha,1000)
-                       &ret = DFWNext()             
-                       &linha = 'S03|'+NfiCstCof.Trim()                           //   N     2           Codigo de Situação Tributaria do COFINS     
-                       &linha += '|'+trim(str(NfiQtd,16,4))            //   N     16  4       Quantidade vendida
-                       &linha += '|0.00'                    //   N     15  4       Aliquota do COFINS(Reais)
-                       &linha += '|'+trim(str(NfiVlrCof,15,2))         //   N     15  2       Valor do COFINS
-                       do 'tira_car'
-                      
-                  // Grupo de Cofins nao tributado 
-                  case NfiCstCof = '04' or NfiCstCof = '06' or NfiCstCof = '07' or NfiCstCof = '08' or NfiCstCof = '09'
-                       &linha = 'S|'
-                       &ret = DFWPTxt(&Linha,1000)
-                       &ret = DFWNext()   
-                       &linha = 'S04|'+NfiCstCof                //   N     2           Codigo de Situação Tributaria do COFINS     
-                       do 'tira_car'
-                      
-                  // Grupo de Cofins outras operacoes
-                  otherwise
-        
-                       &linha = 'S|'
-                       &ret = DFWPTxt(&Linha,1000)
-                       &ret = DFWNext()   
-         
-                       &linha = 'S05|'+NfiCstCof                      //   N     2           Codigo de Situação Tributaria do COFINS     
-                       &linha += '|'+trim(str(NfiVlrCof,15,2))    //   N     15  2       Valor do COFINS 
-                       do 'tira_car'
-        
-        
-                       if NfiAlqCof > 0
-                          // &linha = 'S07|'+trim(str(NfiTotPrd,15,2))    //   N     15  2       Valor da Base de Calculo da COFINS // Alterado dia 21/12/2017: Base do COFINS está sem o desconto, frete, acréscimo (NfiVlrCof/NfiAlqCof*100)
-                          &linha = 'S07|'+trim(str(NfiBseClcCOFINS,15,2))    //   N     15  2       Valor da Base de Calculo da COFINS
-                          &linha += '|'+trim(str(NfiAlqCof,5,2))            //   N      5  2       Aliquota da COFINS(Percentual) 
-                          do 'tira_car'
-                       else
-                          &linha = 'S07|0.00'                           //   N     15  2       Valor da Base de Calculo da COFINS
-                          &linha += '|0.00'                             //   N      5  2       Aliquota da COFINS(Percentual) 
-                          do 'tira_car'
-                       endif                             
-                endcase
-
-                // UB. Tributos Devolvidos (para o item da NF-e)                                                                                          
-                if &NfsTipTrnNOP = 3 or &NfsTipTrnNOP = 4
-                    &Linha = 'U50|'+trim(str(NfiPerDev,5,2))+'|'+trim(str(NfiVlrIpiDev,10,2))
-                    do 'tira_car'
-                endif
-
-       endfor //item da nota
-
-       &TotImp = NfsTotTribFedNac + NfsTotTribFedImp + NfsTotTribEst + NfsTotTribMun
-
-       // TOTALIZADORES
-       &linha = 'W|'
-       &ret = DFWPTxt(&Linha,1000)
-       &ret = DFWNext() 
-
-       &linha = 'W02|'+trim(str(NfsBseClcIcms,15,2))        //   N    15  2    Base de Calculo do ICMS
-       &linha += '|'+trim(str(NfsVlrIcms,15,2))             //   N    15  2    Valor total do ICMS
-       &linha += '|'+trim(str(NfsBseClcSt,15,2))            //   N    15  2    Base de calculo do ICMS ST
-       &linha += '|'+trim(str(NfsVlrSt,15,2))               //   N    15  2    Valor Total do ICMS ST
-       &linha += '|'+trim(str(NfsVlrTotPrd,15,2))           //   N    15  2    Valor Total dos produtos e serviços
-       &linha += '|'+trim(str(NfsVlrFrt,15,2))              //   N    15  2    Valor Total do Frete
-       &linha += '|0.00'                                    //   N    15  2    vSeg) Valor Total do Seguro
-       &linha += '|'+trim(str(NfsVlrDsc,15,2))              //   N    15  2    Valor Total do Desconto
-       &linha += '|0.00'                                    //   N    15  2    Valor Total do II
-       &linha += '|'+trim(str(NfsVlrIpi,15,2))              //   N    15  2    Valor Total do IPI
-       &linha += '|'+trim(str(NfsVlrPis,15,2))              //   N    15  2    Valor do PIS
-       &linha += '|'+trim(str(NfsVlrCofins,15,2))           //   N    15  2    Valor do COFINS
-       &linha += '|'+trim(str(NfsOutDsp,12,2))              //   N    15  2    Outras Despesas acessorias
-       &linha += '|'+trim(str(NfsVlrTotNf,15,2))            //   N    15  2    Valor Total da NF-e      
-       &linha += '|'+trim(str(&TotImp,15,2))                //   N    15  2  Valor Total dos Tributos
-       &linha += '|'+trim(str(NfsDesIcms,15,2))             //   N    15  2  Valor Total do ICMS Desonerado
-       &linha += '|'+trim(str(NfsVlrFCP,15,2))              //   N    15  2 (vFCPUFDest)      Valor total do ICMS relativo Fundo de Combate a Pobreza (FCP) da UF de destino
-       &linha += '|'+trim(str(NfsVlrIcmsDest,15,2))         //   N    15  2 (vICMSUFDest)     Valor total do ICMS Interestadual para a UF de destino
-       &linha += '|'+trim(str(NfsVlrIcmsOri,15,2))          //   N    15  2 (vICMSUFRemet)    Valor total do ICMS Interestadual para a UF do remetente
-       &linha += '|'                                        //   N    13  2 (vFCP)            Valor Total do Fundo de Combate a Pobreza
-       &linha += '|'+trim(str(NfsVlrFCPSub,15,2))           //   N    13  2 (vFCPST)          Valor do Fundo de Combate a Pobreza Retido por ST
-       &linha += '|0.00'                                    //   N    13  2 (vFCPSTRet)       Valor do Fundo de Combate a Pobreza Retido Anteriormente
-       &linha += '|'+trim(str(NfsVlrIPIDev,15,2))           //   N    13  2 (vIPIDevol)       Valor Total do IPI Devolvido 
-       
-       &ret = DFWPTxt(&Linha,1000)
-       &ret = DFWNext() 
-       
-       // Transporte
-       &linha = 'X|'+trim(str(NfsTpFrt,1))+'|'                  //   N    1        Modalidade do frete   
-       do 'tira_car'
-    
-       if not null(NfsTrpCod)
-
-            &NfsTrpCod = NfsTrpCod
-            do'Transportadora'        
-           
-           &linha = 'X03|'+trim(&TrpNom)                         //   C    60       Razão Social      
-           &linha += '|'+trim(&ForIes)                           //   C    14       Inscrição Estadual
-           &linha += '|'+trim(&TrpEndCompleto)                   //   C    60       Endereço Completo
-           &linha += '|'+trim(&ForUfCod)                         //   C     2       UF
-           &linha += '|'+trim(&ForCidNom)                        //   C    60       Nome do Municipio
-           &linha += '|'+trim(Substr(&ForEmail,1,80))            //   C    80       Email do Transportador
-           do 'tira_car'
-           
-           if &ForTp = 'J' and not Null(&ForCnpj)
-               &linha = 'X04|'+trim(&ForCnpj)                    //   C    14       CNPJ
-               do 'tira_car'
-           else
-               If not null(&ForCpf)
-                   &linha = 'X05|'+trim(&ForCpf)                 //   C    11       CPF
-                   do 'tira_car'
-               EndIf
-           endif           
-
-           if not null(NfsPlcVei)
- 
-              &NfsPlcVei = NfsPlcVei
-              &NfsPlcVei = Strreplace(&NfsPlcVei,'-','')
-              &NfsPlcVei = Strreplace(&NfsPlcVei,'.','')
-              &NfsPlcVei = Strreplace(&NfsPlcVei,'/','')
-              &NfsPlcVei = Strreplace(&NfsPlcVei,'(','')
-              &NfsPlcVei = Strreplace(&NfsPlcVei,')','')
-              &NfsPlcVei = Strreplace(&NfsPlcVei,'{','')
-              &NfsPlcVei = Strreplace(&NfsPlcVei,'}','')
-
-              if not null(&NfsPlcVei) and &IdDest = '1'   // Se a placa não estiver nula e é operação interna
-                  &Linha  = 'X18|'+&NfsPlcVei.Trim()
-                  &Linha += '|'+NfsVeiUf 
-                  &Linha += '|'+NfsAntt+'|'
-                  do 'tira_car'
-              endif
-
-           endif
-       endif
-      
-
-       // Volumes
-       if not null(NfsQtd)
-           &linha = 'X26|'+trim(str(NfsQtd,15))             //   N  15    Quantidade de volumes transportados
-           &linha += '|'+trim(NfsEsp)                       //   C  60    Especie dos volumes transportados
-           &linha += '|'+trim(NfsMarca)                     //   C  60    Marca dos volumes transportados
-           &linha += '|'+trim(NfsNumeracao)                 //   C  60    Numeração dos volumes transportados
-           &linha += '|'+trim(str(NfsPesoLiquido,15,3))     //   N  15  3 Peso Liquido(KG)
-           &linha += '|'+trim(str(NfsPesoBruto,15,3))       //   N  15  3 Peso Bruto(KG)
-           do 'tira_car'
-      endif
-
-
-      // Cobrança
-      &NfpSeqFtr = 0
-
-      For Each (NfpSeq)
-         &NfpSeqFtr = NfpSeq 
-         exit
-      endfor       
-         
-      &linha = 'Y|'
-      &ret = DFWPTxt(&Linha,1000)
-      &ret = DFWNext()     
-
-      if &NfpSeqFtr > 0 // Se tiver parcelas gera Grupo Duplicatas (Y07) e Grupo Informações de Pagamento (YA)
-
-          &linha = 'Y02|' +(Trim(Str(NfsNum)))           //   C  60         Numero da Fatura
-          &linha += '|'+ trim(str(NfsTotPar,15,2))     //   N  15  2      Valor Original da Fatura
-          &linha += '|'                                  //   N  15  2      Valor do desconto
-          &linha += '|'   +trim(str(NfsTotPar,15,2))   //   N  15  2      Valor Liquido da Fatura
-          do 'tira_car'
-
-          &SdtNfPar.Clear()
-
-          for each NfpSeq // Grupo Duplicatas (Y07)
-
-              &Dia             =  NullValue(&Dia)
-              &Mes             =  NullValue(&Mes)
-              &Ano             =  NullValue(&Ano)
-              &Data_Formatada  =  NullValue(&Data_Formatada)
-        
-              &Dia             =  Padl(Trim(Str(Day(NfpVct),2,0)),2,'0')
-              &Mes             =  Padl(Trim(Str(Month(NfpVct),2,0)),2,'0')
-              &Ano             =  Str(Year(NfpVct),4,0)
-        
-              &Data_Formatada  =  &Ano + "-" + &Mes + '-' + &Dia    
-
-              &Venc = &Data_Formatada
-                
-              &linha  = 'Y07|' + Padl(Trim(Str(NfpSeq)),3,'0')  //   C  60      Numero da Duplicata              
-              &linha += '|'   +trim(&Venc)                      //   D          Data do vencimento
-              &linha += '|'   +trim(str(NfpVlr,15,2))           //   N  15  2   Valor da duplicata
-
-              &TiraBarra = 'N'
-              do 'tira_car'
-              &TiraBarra = 'S'  
-         endfor
-
-         For Each NfpSeq // Grupo Informações de Pagamento (YA)
-               &Flag = 'N' 
-
-               &NfpFormCod = NfpFormCod
-               do'FormaPagamento' // Busca a forma de pagamento NFque está relacionada na forma de pagamento
-    
-                for &SdtNfParItem in &SdtNfPar
-                    if &SdtNfParItem.FormPgtoNF = &FormPgtoNF 
-                                     
-                       &SdtNfParItem.NfpVlr += NfpVlr
-                       &Flag = 'S'
-                    endif
-                endfor
-                                
-                if &Flag = 'N'
-                   &SdtNfParItem = new SdtNfPar.SdtNfParItem()
-                   &SdtNfParItem.FormPgtoNF = &FormPgtoNF
-                   &SdtNfParItem.NfpVlr     = NfpVlr
-                   &SdtNfPar.Add(&SdtNfParItem)
-                endif
-         endfor
-                             
-         for &SdtNfParItem in &SdtNfPar                                                                                                
-             &linha  = 'YA|' + &SdtNfParItem.FormPgtoNF                                                     // N    2     (tPag)           Forma de Pagamento     
-             &linha += '|'   + trim(str(&SdtNfParItem.NfpVlr,15,2))                                         // N   13 2   (vPag)           Valor do Pagamento
-             &linha += '|0.00'                                                                              // N   13 2   (vTroco)         Valor do Troco
-             &linha += '|'                                                                                  // N    1     (tpIntegra)      Tipo de Integração para o Equipamento
-             &linha += '|'                                                                                  // C   14     (CNPJ)           CNPJ da Credenciadora de cartão de crédito e/ou débito
-             &linha += '|'                                                                                  // N    2     (tBand)          Bandeira da operadora de cartão de crédito e/ou débito
-             &linha += '|'                                                                                  // C   20     (cAut)           Número de autorização da operação cartão de crédito e/ou débito 
-             &linha += '|'   + trim(&Pagamento)                                                             // N    1     (IndPag)         Indicador da Forma de Pagamento
-             do 'tira_car'                                                                                                                                                                       
-         endfor 
-      
-      Else // Se não tiver parcelas coloca a forma de pagamento 90: Sem Pagamento
-            &linha  = 'YA|90'                                                                              // N    2     (tPag)           Forma de Pagamento        90 = Sem Pagamento
-            &linha += '|0.00'                                                                              // N   13 2   (vPag)           Valor do Pagamento
-            &linha += '|0.00'                                                                              // N   13 2   (vTroco)         Valor do Troco
-            &linha += '|'                                                                                  // N    1     (tpIntegra)      Tipo de Integração para o Equipamento
-            &linha += '|'                                                                                  // C   14     (CNPJ)           CNPJ da Credenciadora de cartão de crédito e/ou débito
-            &linha += '|'                                                                                  // N    2     (tBand)          Bandeira da operadora de cartão de crédito e/ou débito
-            &linha += '|'                                                                                  // C   20     (cAut)           Número de autorização da operação cartão de crédito e/ou débito 
-            do 'tira_car'                                                                                                                                              
-      EndIf
-
-         //Informações adicionais
-         &InfAdc = ''
-
-// Alteração 19/12/2017: As observações fiscais passaram a ser gravadas na PGeraNota
-//         if NfsVlrIcmsDest > 0
-//            &InfAdc += 'VALOR DO ICMS DEVIDO A UF DE DESTINO: '+Trim(str(NfsVlrIcmsDest,10,2)) 
-//         endif
-//
-//         if not null(&CliCnpjEndEnt) or Not null(&CliCpfEndEnt) 
-//            if not null(&CliEndEnt)
-//    
-//                &InfAdc += 'Endereco de Entrega: ' + &CliEndEnt.Trim()+','+&CliEndNumEnt.Trim()+','+&CliEndComplEnt.Trim()+'-'+&CliEndBaiEnt.Trim()+','+&CliCidNomEnt.Trim()+'-'+&CliUfCodEnt.Trim()+'/'
-//
-//            endif
-//         endif
-//
-//         
-//         &InfAdc += ' Pedido = ' + trim(str(NfsNumPed)) + ' /'
-//
-//         If Not Null(NfsVlrDsc)
-//            &InfAdc += ' SUFRAMA: ' + Trim(ToformattedString(&CliInsSuf)) + ' / '
-//         Endif
-  
-         If Not Null(NfsInfCmp)
-             &InfAdc += trim(NfsInfCmp) + ' / '
-         Endif
-
-// Alteração 19/12/2017: As observações fiscais passaram a ser gravadas na PGeraNota
-//         if NfsDesIcms > 0
-//            &InfAdc += ' DESCONTO AREA DE LIVRE COMERCIO:'+TRIM(STR(NfsDesIcms,12,2))+' / '
-//         endif
-//
-//         if NfsDesCofins > 0
-//            &InfAdc += ' DESCONTO COFINS:'+TRIM(STR(NfsDesCofins,12,2))+' / '
-//         endif
-//
-//         if NfsDesPis > 0
-//            &InfAdc += ' DESCONTO PIS:'+TRIM(STR(NfsDesPis,12,2))+' / '
-//         endif  
-
-         do 'TiraCar'
-         &InfAdc = ''
-         &InfAdc = trim(&linha1)
-         &linha = 'Z|' +''                 //   C  256        Informações Adicionais de Interesse do Fisco
-         &linha += '|' +trim(&InfAdc)      //   C  5000       Informações Complementares de interesse do Contriuinte
-         &ret = DFWPTxt(&Linha,1000)
-         &ret = DFWNext()
-
-  Endfor   // Fim do For nota fiscal
-
-endfor // Fim do For da SDT de Notas
-
-EndSub // Fim da Sub 'MontaArquivo'
-
-
-Sub 'Tiracar'
-
-    &Linha1 = ""
-
-    for  &i = 1 to len(trim(&InfAdc))
-    
-        &caracter=substr(&InfAdc,&i,1)  
-    
-       do case
-    //           case asc(&caracter) > 96 .and.
-    //                asc(&caracter) < 126
-    //                &caracter=upper(&caracter)
-               case asc(&caracter) = 225 .or.
-                    asc(&caracter) = 193 .or.
-                    asc(&caracter) = 224 .or.
-                    asc(&caracter) = 192 .or.
-                    asc(&caracter) = 227 .or.
-                    asc(&caracter) = 195 .or.
-                    asc(&caracter) = 194 .or.
-                    asc(&caracter) = 196
-                    &caracter="A"
-               case asc(&caracter) = 233 .or.
-                    asc(&caracter) = 201 .or.
-                    asc(&caracter) = 200 .or.
-                    asc(&caracter) = 232 .or.
-                    asc(&caracter) = 203 
-                    &caracter="E"
-               case asc(&caracter) = 237 .or.
-                    asc(&caracter) = 205 .or.
-                    asc(&caracter) = 204 .or.
-                    asc(&caracter) = 236
-                    &caracter="I"
-               case asc(&caracter) = 243 .or.
-                    asc(&caracter) = 211 .or.
-                    asc(&caracter) = 242 .or.
-                    asc(&caracter) = 210 .or.
-                    asc(&caracter) = 245 .or.
-                    asc(&caracter) = 213 .or.
-                    asc(&caracter) = 226 .or.
-                    asc(&caracter) = 214 .or.
-                    asc(&caracter) = 212
-                    &caracter="O"
-               case asc(&caracter) = 250 .or.
-                    asc(&caracter) = 217 .or.
-                    asc(&caracter) = 218 .or.
-                    asc(&caracter) = 249
-                    &caracter="U"
-               case asc(&caracter) = 231 .or.
-                    asc(&caracter) = 199
-                    &caracter="C"
-               case asc(&caracter) = 241 .or.
-                    asc(&caracter) = 209
-                    &caracter="N"
-               case asc(&caracter) = 186 .or.
-                    asc(&caracter) = 187
-                    &caracter="." 
-               case asc(&caracter) = 10 .or. asc(&caracter) = 13
-                    &Caracter = ' '
-            endcase 
-        
-       
-            if &caracter = "´"                    
-               &caracter="."
-            endif
-        
-            if &caracter = "º"                    
-               &caracter="o"
-            endif
-        
-            if &caracter = "Ê"                    
-               &caracter="E"
-            endif
-    
-         if &caracter = "&"
-               &caracter = "E"
-            endif
-    
-            if &caracter = "?"
-              &caracter = ""
-            endif
-    
-            if &caracter  = "'"
-               &caracter = ""
-            endif
-    
-            if &caracter = '"'
-               &caracter = ""
-            endif
-    
-            if &caracter = '#'
-               &caracter = ""
-            endif
-    
-            if &caracter = "*"
-               &caracter = ""
-            endif
-    
-            if &caracter = "!"
-               &caracter = ""
-            endif
-               
-            if &caracter = "ª"                    
-               &caracter="a"
-            endif
-        
-            if &caracter = "Ê"                    
-               &caracter="E"
-            endif
-    
-            if &caracter = "Ô"
-               &caracter = "O"
-            endif
-    
-            if &caracter = "°"
-               &caracter = ""
-            endif
-    
-    //        if &caracter = "$"
-    //           &caracter = ""
-    //        endif
-    
-    //        if &caracter = '@'
-    //           &caracter = ""
-    //        endif
-    
-            if &caracter = '+'
-               &caracter = ""
-            endif
-    
-    //        if &caracter = ","
-    //           &caracter = ""
-    //        endif
-    
-    //        if &caracter = '_'
-    //           &caracter = ""
-    //        endif
-    
-            if &caracter = '´'
-               &caracter = ""
-            endif
-    
-            if &caracter = "Â"
-               &caracter = "A"
-            endif
-    
-        &linha1 += &caracter
-       
-    endfor 
-endsub
-
-
-Sub 'Tira_car'
-   &Linha1 = ""
-
-    for  &i = 1 to len(trim(&Linha))
-    
-        &caracter=substr(&Linha,&i,1)  
-    
-       do case
-    //           case asc(&caracter) > 96 .and.
-    //                asc(&caracter) < 126
-    //                &caracter=upper(&caracter)
-               case asc(&caracter) = 225 .or.
-                    asc(&caracter) = 193 .or.
-                    asc(&caracter) = 224 .or.
-                    asc(&caracter) = 192 .or.
-                    asc(&caracter) = 227 .or.
-                    asc(&caracter) = 195 .or.
-                    asc(&caracter) = 194 .or.
-                    asc(&caracter) = 196
-                    &caracter="A"
-               case asc(&caracter) = 233 .or.
-                    asc(&caracter) = 201 .or.
-                    asc(&caracter) = 200 .or.
-                    asc(&caracter) = 232 .or.
-                    asc(&caracter) = 203 
-                    &caracter="E"
-               case asc(&caracter) = 237 .or.
-                    asc(&caracter) = 205 .or.
-                    asc(&caracter) = 204 .or.
-                    asc(&caracter) = 236
-                    &caracter="I"
-               case asc(&caracter) = 243 .or.
-                    asc(&caracter) = 211 .or.
-                    asc(&caracter) = 242 .or.
-                    asc(&caracter) = 210 .or.
-                    asc(&caracter) = 245 .or.
-                    asc(&caracter) = 213 .or.
-                    asc(&caracter) = 226 .or.
-                    asc(&caracter) = 214 .or.
-                    asc(&caracter) = 212
-                    &caracter="O"
-               case asc(&caracter) = 250 .or.
-                    asc(&caracter) = 217 .or.
-                    asc(&caracter) = 218 .or.
-                    asc(&caracter) = 249
-                    &caracter="U"
-               case asc(&caracter) = 231 .or.
-                    asc(&caracter) = 199
-                    &caracter="C"
-               case asc(&caracter) = 241 .or.
-                    asc(&caracter) = 209
-                    &caracter="N"
-               case asc(&caracter) = 186 .or.
-                    asc(&caracter) = 187
-                    &caracter="."  
-               case asc(&caracter) = 10 .or. asc(&caracter) = 13
-                    &Caracter = ' '
-            endcase 
-        
-       
-            if &caracter = "´"                    
-               &caracter="."
-            endif
-            if &caracter = "ª"                    
-               &caracter="a"
-            endif
-        
-            if &caracter = "º"                    
-               &caracter=" "
-            endif
-        
-            if &caracter = "Ê"                    
-               &caracter="E"
-            endif
-    
-         if &caracter = "&"
-               &caracter = "E"
-            endif
-    
-            if &caracter = "?"
-              &caracter = ""
-            endif
-    
-            if &caracter  = "'"
-               &caracter = ""
-            endif
-    
-            if &caracter = '"'
-               &caracter = ""
-            endif
-    
-    //        if &caracter = ":"
-    //           &caracter = ""
-    //        endif
-    
-            if &caracter = '#'
-               &caracter = ""
-            endif
-    
-            if &caracter = "*"
-               &caracter = ""
-            endif
-    
-            If &TiraBarra = 'S' // Permite barra na Tag Y07
-                if &caracter = '/'
-                   &caracter = ""
-                endif
-            EndIf
-    
-            if &caracter = "!"
-               &caracter = ""
-            endif
-               
-            if &caracter = "ª"                    
-               &caracter="a"
-            endif
-        
-            if &caracter = "Ê"                    
-               &caracter="E"
-            endif
-    
-            if &caracter = "Ô"
-               &caracter = "O"
-            endif
-    
-            if &caracter = "°"
-               &caracter = ""
-            endif
-    //
-    //        if &caracter = "$"
-    //           &caracter = ""
-    //        endif
-    
-    //        if &caracter = '('
-    //           &caracter = ""
-    //        endif
-    //
-    //        if &caracter = ')'
-    //           &caracter = ""
-    //        endif
-    
-    //        if &caracter = '@'
-    //           &caracter = ""
-    //        endif
-    
-            if &caracter = '+'
-               &caracter = ""
-            endif
-    //
-    //        if &caracter = '%'
-    //           &caracter = ""
-    //        endif
-    
-    //        if &caracter = ","
-    //           &caracter = ""
-    //        endif
-    
-    //        if &caracter = '_'
-    //           &caracter = ""
-    //        endif
-    
-            if &caracter = '´'
-               &caracter = ""
-            endif
-    //
-    //        if &caracter = ';'
-    //           &caracter= ""
-    //        endif
-    
-            if &caracter = "Â"
-               &caracter = "A"
-            endif
-    
-        &linha1 += &caracter        
-    endfor    
-    
-    &Linha = Trim(&linha1) 
-    &ret = DFWPTxt(&Linha,1000)
-    &ret = DFWNext()
-EndSub
-
-
-Sub'FormaPagamento'
-    For Each FormCod
-        Where FormCod = &NfpFormCod
-            &FormPgtoNF = FormPgtoNF
-    EndFor
-
-    If Null(&FormPgtoNF) // Se não estiver relacionado nenhuma Forma de Pagamento NF no cadastro de Forma de Pagamento, considerar como 15: Boleto Bancário.
-        &FormPgtoNF = '15' // Boleto Bancário
-    EndIf
-EndSub
-
-
-sub 'DadosPedido'
-    &PedCondCod = 0
-    
-    For each
-        where PedCod = &NfsNumPed
-    
-            &PedCondCod = PedCondCod
-            &PedOrdCompra = PedOrdCompra
-            &PedIndPres = PedIndPres
-            &PedIndIntermed = PedIndIntermed            
-            &PedCnpjIntermed = PedCnpjIntermed
-            &PedIdCadIntTran = PedIdCadIntTran
-    endfor 
-    
-    For Each
-        Where CondCod = &PedCondCod
-            
-            If CondTp = 'V'
-                &Pagamento ='0'//a vista
-            Else
-                &Pagamento = '1'//a prazo
-            EndIf           
-    endfor
-endSub
-
-
-Sub 'Cliente'
-    For each
-        Where CliCod = &NfsCliCod
-             
-        &CliNom = CliNom
-        &CliCnpj = CliCnpj
-        &CliIes = CliIes
-        &CliPassaporte = CliPassaporte
-        &CliCpf = CliCpf
-        &CliRg = CliRg
-        &CliEnd = CliEnd
-        &CliEndNum = CliEndNum
-        &CliEndBai = CliEndBai
-        &CliCidCod = CliCidCod
-        &CliCidNom = CliCidNom
-        &CliUfCod  = CliUfCod
-        &CliEndComp = CliEndComp
-        &CliEndEnt = CliEndEnt
-        &CliEndNumEnt = CliEndNumEnt
-        &CliEndBaiEnt = CliEndBaiEnt
-        &CliCidCodEnt = CliCidCodEnt
-        &CliCidNomEnt = CliCidNomEnt
-        &CliUfCodEnt  = CliUfCodEnt
-        &CliEndComplEnt = CliEndComplEnt
-        &CliCepEnt = CliCepEnt
-        &CliCep = CliCep
-        &CliFone = CliFone
-        &CliEmail = CliEmail
-        &CliTp = CliTp
-        &CliInsSuf = CliInsSuf
-        &CliIM = CliIM
-        &CliTp2 = CliTp2
-        &CliCnpjEndEnt = CliCnpjEndEnt
-        &CliCpfEndEnt  = CliCpfEndEnt
-        &CliIeIse = CliIEIse
-        &CliCel = CliCel
-        &CliInsProdRural = CliInsProdRural
-        &CliIeEndEnt = CliIeEndEnt
-        &CliRzEndEnt = CliRzEndEnt
-        &CliEmailEndEnt = CliEmailEndEnt
-        &CliFoneEndEnt = CliFoneEndEnt
-    
-        if CliIEIse = 'S'
-           &CliIes = ''
+    &PedDta = &Today
+    &PedDta2 = &Today
+endevent
+
+
+Event 'Alt'
+    if not null(NfsNum)
+        if NfsSts = 'N'
+            call(WNotaFiscal2,&Logon,NfsNum,NfsSer)
+            refresh
+        else
+            msg('Nota Fiscal não pode ser alterada pois sua situação não permite!')
         endif
-    
-        &CliTpEndSeq = CliTpEndSeq
-        &CliTpEndEntSeq = CliTpEndEntSeq
-        do'tipoend'
-    
-        &CliCnpj = strreplace(&CliCnpj,'-','')
-        &CliCnpj = strreplace(&CliCnpj,'.','')
-        &CliCnpj = strreplace(&CliCnpj,'/','')
-        &CliCnpj = strreplace(&CliCnpj,'\','')
-        &CliCnpj = strreplace(&CliCnpj,',','')
-        &CliCnpj = strreplace(&CliCnpj,' ','')
-    
-        &CliCnpjEndEnt = strreplace(&CliCnpjEndEnt,'-','')
-        &CliCnpjEndEnt = strreplace(&CliCnpjEndEnt,'.','')
-        &CliCnpjEndEnt = strreplace(&CliCnpjEndEnt,'/','')
-        &CliCnpjEndEnt = strreplace(&CliCnpjEndEnt,'\','')
-        &CliCnpjEndEnt = strreplace(&CliCnpjEndEnt,',','')
-        &CliCnpjEndEnt = strreplace(&CliCnpjEndEnt,' ','')
-    
-        &CliCpf = strreplace(&CliCpf,'-','')
-        &CliCpf = strreplace(&CliCpf,'.','')
-        &CliCpf = strreplace(&CliCpf,'/','')
-        &CliCpf = strreplace(&CliCpf,'\','')
-        &CliCpf = strreplace(&CliCpf,',','')
-        &CliCpf = strreplace(&CliCpf,' ','')
-    
-        &CliCpfEndEnt = strreplace(&CliCpfEndEnt,'-','')
-        &CliCpfEndEnt = strreplace(&CliCpfEndEnt,'.','')
-        &CliCpfEndEnt = strreplace(&CliCpfEndEnt,'/','')
-        &CliCpfEndEnt = strreplace(&CliCpfEndEnt,'\','')
-        &CliCpfEndEnt = strreplace(&CliCpfEndEnt,',','')
-        &CliCpfEndEnt = strreplace(&CliCpfEndEnt,' ','')
-    
-        &CliIes = strreplace(&CliIes,'-','')
-        &CliIes = strreplace(&CliIes,'.','')
-        &CliIes = strreplace(&CliIes,'/','')
-        &CliIes = strreplace(&CliIes,'\','')
-        &CliIes = strreplace(&CliIes,',','')
-        &CliIes = strreplace(&CliIes,' ','')
+    endif
+EndEvent  // 'Alt'
 
-        &CliIeEndEnt = strreplace(&CliIeEndEnt,'-','')
-        &CliIeEndEnt = strreplace(&CliIeEndEnt,'.','')
-        &CliIeEndEnt = strreplace(&CliIeEndEnt,'/','')
-        &CliIeEndEnt = strreplace(&CliIeEndEnt,'\','')
-        &CliIeEndEnt = strreplace(&CliIeEndEnt,',','')
-        &CliIeEndEnt = strreplace(&CliIeEndEnt,' ','')
 
-        &CliInsProdRural = strreplace(&CliInsProdRural,'-','')
-        &CliInsProdRural = strreplace(&CliInsProdRural,'.','')
-        &CliInsProdRural = strreplace(&CliInsProdRural,'/','')
-        &CliInsProdRural = strreplace(&CliInsProdRural,'\','')
-        &CliInsProdRural = strreplace(&CliInsProdRural,',','')
-        &CliInsProdRural = strreplace(&CliInsProdRural,' ','')
-    
-        &CliCep = strreplace(&CliCep,'-','')
-        &CliCep = strreplace(&CliCep,' ','')
+Event 'Exc'
 
-        &CliCepEnt = strreplace(&CliCepEnt,'-','')
-        &CliCepEnt = strreplace(&CliCepEnt,' ','')
-    
-        &CliFone = strreplace(&CliFone,'-','')
-        &CliFone = strreplace(&CliFone,')','')
-        &CliFone = strreplace(&CliFone,'(','')
-        &CliFone = strreplace(&CliFone,' ','')
+if not null(NfsNum)
+    &Mensagem = 'Deseja realmente EXCLUIR a nota fiscal nº. ' + trim(str(NfsNum)) + ' ?'
+   Confirm(&Mensagem, N)
 
-        &CliFoneEndEnt = strreplace(&CliFoneEndEnt,'-','')
-        &CliFoneEndEnt = strreplace(&CliFoneEndEnt,')','')
-        &CliFoneEndEnt = strreplace(&CliFoneEndEnt,'(','')
-        &CliFoneEndEnt = strreplace(&CliFoneEndEnt,' ','')
-    
-        &CliCel = strreplace(&CliCel,'-','')
-        &CliCel = strreplace(&CliCel,')','')
-        &CliCel = strreplace(&CliCel,'(','')
-        &CliCel = strreplace(&CliCel,' ','')
-        &CliCel = Trim(substr(&CliCel,1,14))
-                 
-    EndFor
+   if confirmed()
+     Call(PVerStsNF, &Logon, NfsNum, NfsSer, &NfsSts2)
 
-    for each
-       where UfCod = &CliUfCod
-    
-           &CliPaiCod = UfPaiCod
-           &CliPaiNom = UfPaiNom    
+     if &NfsSts2 = 'N'
+        Call(PExcluirNF,&Logon,NfsNum,NfsSer,NfsNumPed)
+        refresh
+     else
+        msg('Nota Fiscal não pode ser cancelada pois sua situação não permite')
+     endif
+
+   endif
+
+endif
+
+EndEvent  // 'Exc'
+
+
+
+Event 'Imp'
+    &SdtNota.Clear()
+    for each line
+      &SdtNotaItem = new SdtNota.SdtNotaItem()
+      &SdtNotaItem.NfsNum = NfsNum
+      &SdtNotaItem.NfsSer = NfsSer
+      &SdtNota.Add(&SdtNotaItem)
     endfor
     
-    for each
-       where UfCod = &CliUfCodEnt
-    
-           &CliPaiCodEnt = UfPaiCod
-           &CliPaiNomEnt = UfPaiNom    
+    if &SdtNota.Count > 0
+       call(RRelNf,&Logon,&SdtNota)
+    endif
+EndEvent  // 'Imp'
+
+event load
+
+&TotaPed += NfsVlrTotNf
+
+endevent 
+
+event refresh
+    &Esc = 'N'
+    &TotaPed = 0
+    Call(PCommit) 
+    Call(PImpRetEmissor, &Logon) // Importa os retornos do emissor e atualiza o status das notas fiscais
+endevent
+
+
+event &sel.Click
+    for each line
+        &Esc = &sel
     endfor
-EndSub
+endevent
 
 
-sub'Transportadora'
-    for each
-        where TrpCod = &NfsTrpCod
+
+Event 'Excel'
+   call('gxSelDir',&Arquivo,'C:\ ','Selecione o diretório',0)
+
+   if not null(&arquivo)
+      &arquivo += '\NotasFiscais.xls'
+
+      &ret = deletefile(&arquivo)
+
+      &Excel.Open(&arquivo)
+
+      &x = 0
+
+      if &CnfNfsNum = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Nota Fiscal'
+      endif
+
+      if &CnfNfsSer = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Série'
+      endif
+
+      if &CnfNfsDtaEms = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Emissão'
+      endif
+
+      if &CnfNfsCli = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Cliente'
+      endif
+
+      if &CnfNfsTotNf = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Total da Nf'
+      endif
+
+      if &CnfNfsTotPrd = 1
+         &x += 1
+         &Excel.Cells(1,&x).text = 'Total dos Produtos'
+      endif
+
+      if &CnfNfsTpTrn = 1
+         &x += 1
+         &Excel.Cells(1,&x).text = 'Tipo de Transação'
+      endif
+
+      if &CnfNfsVenNom = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Vendedor'
+      endif
+
+      if &CnfNfsForNom = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Transportadora'
+      endif
+
+      if &CnfNfsCidNom = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Cidade'
+      endif
+
+      if &CnfNfsUfCod= 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Estado'
+      endif
+
+      if &CnfNfsBseIcms = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Base de Calculo do ICMS'
+      endif
+
+      if &CnfNfsVlrIcms = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Valor do ICMS'
+      endif
+
+      if &CnfNfsBseSt = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Base de Calculo da ST'
+      endif
+
+      if &CnfNfsVlrSt = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Valor da ST'
+      endif
+
+      if &CnfNfsBseClcIpi = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Base de Calculo do IPI'
+      endif
+
+      if &CnfNfsVlrIpi = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Valor do IPI'
+      endif
+
+      if &CnfNfsOutDsp = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Outras Despesas'
+      endif
+
+      if &CnfNfsFrete = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Frete'
+      endif
+
+      if &CnfNfsDsc = 1
+         &x += 1
+         &Excel.Cells(1,&x).Text = 'Desconto'
+      endif
+
+      &y = 0
+      &x = 2
+      
+      for each line
+
+         if &CnfNfsNum = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsNum
+          endif
     
-            &TrpNom = Substr(TrpNom,1,60)
-            &ForCnpj = TrpCnpj
-            &ForIes = TrpIe
-            &ForCpf = TrpCpf
-            &ForRG = TrpRG
-            &TrpEndCompleto = Trim(TrpEnd)
+          if &CnfNfsSer = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Text = NfsSer
+          endif
+    
+          if &CnfNfsDtaEms = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Date = NfsDtaEms
+          endif
+    
+          if &CnfNfsCli = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Text = NfsCliNom
+          endif
+    
+          if &CnfNfsTotNf = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsVlrTotNf
+          endif
+    
+          if &CnfNfsTotPrd = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsVlrTotPrd
+          endif
+    
+          if &CnfNfsTpTrn = 1
+             &y += 1
+             &Excel.Cells(&x,&y).text = NfsTipTrnDsc
+          endif
+    
+          if &CnfNfsVenNom = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Text = NfsVenNom
+          endif
+    
+          if &CnfNfsForNom = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Text = NfsTrpNom
+          endif
+    
+          if &CnfNfsCidNom = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Text = NfsCliCidNom
+          endif
+    
+          if &CnfNfsUfCod= 1
+             &y += 1
+             &Excel.Cells(&x,&y).Text = NfsCliUfCod
+          endif
 
-            If not null(TrpEndNum)
-                &TrpEndCompleto +=  ', ' + Trim(TrpEndNum)
-            EndIF
+          if  &CnfNfsBseIcms = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsBseClcIcms
+          endif
 
-            &ForEndNum = TrpEndNum
-            &ForEndBai = TrpEndBai
-            &ForCep = TrpEndCep
-            &ForCidCod = TrpCidCod
-            &ForCidNom = TrpCidNom
-            &ForUfCod = TrpUFCod
-            &ForEndCompl = TrpEndCmp
-            &ForFone = TrpFone
-            &ForEmail = TrpEmail
-            &ForTp = TrpTp
-        
-            &ForCnpj = strreplace(&ForCnpj,'-','')
-            &ForCnpj = strreplace(&ForCnpj,'.','')
-            &ForCnpj = strreplace(&ForCnpj,'/','')
-            &ForCnpj = strreplace(&ForCnpj,'\','')
-            &ForCnpj = strreplace(&ForCnpj,',','')
-            &ForCnpj = strreplace(&ForCnpj,' ','')
-        
-            &ForCpf = strreplace(&ForCpf,'-','')
-            &ForCpf = strreplace(&ForCpf,'.','')
-            &ForCpf = strreplace(&ForCpf,'/','')
-            &ForCpf = strreplace(&ForCpf,'\','')
-            &ForCpf = strreplace(&ForCpf,',','')
-            &ForCpf = strreplace(&ForCpf,' ','')
-        
-            &ForIes = strreplace(&ForIes,'-','')
-            &ForIes = strreplace(&ForIes,'.','')
-            &ForIes = strreplace(&ForIes,'/','')
-            &ForIes = strreplace(&ForIes,'\','')
-            &ForIes = strreplace(&ForIes,',','')
-            &ForIes = strreplace(&ForIes,' ','')
-        
-            &ForCep = strreplace(&ForCep,'-','')                
-    endfor
+          if  &CnfNfsVlrIcms = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsVlrIcms
+          endif
+
+          if  &CnfNfsBseSt = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsBseClcSt
+          endif
+
+          if  &CnfNfsVlrSt = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsVlrSt
+          endif
+
+          if  &CnfNfsBseClcIpi = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsBseClcIpi
+          endif
+
+          if  &CnfNfsVlrIpi = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsVlrIpi
+          endif
+
+          if &CnfNfsOutDsp = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsOutDsp
+          endif
+
+          if &CnfNfsFrete = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsVlrFrt
+          endif
+
+          if &CnfNfsDsc = 1
+             &y += 1
+             &Excel.Cells(&x,&y).Number = NfsVlrDsc
+          endif
+          
+    
+
+           &y = 0
+           &x += 1
+      endfor      
+
+      &Excel.Save()
+//      &Excel.Show()
+      &Excel.Close()
+
+      MSG('Arquivo Gerado com Sucesso !!!')
+   else
+      msg('Selecione um diretório válido')
+   endif
+EndEvent  // 'Excel'
+
+Event 'Opcoes'
+WCnfNf.Call(&Logon)
+do'Config'
+refresh
+EndEvent  // 'Opcoes'
+
+
+sub'Config'
+
+  for each
+   where CnfNfsSeq = 1
+   where CnfNfsUsr = &Logon.UsrCod
+
+    &CnfNfsSeq = CnfNfsSeq
+    &CnfNfsUsr = CnfNfsUsr
+    &CnfNfsNum = CnfNfsNum
+    &CnfNfsSer = CnfNfsSer
+    &CnfNfsDtaEms = CnfNfsDtaEms
+    &CnfNfsCli = CnfNfsCli
+    &CnfNfsTotNf = CnfNfsTotNf
+    &CnfNfsTotPrd = CnfNfsTotPrd
+    &CnfNfsTpTrn = CnfNfsTpTrn
+    &CnfNfsVenNom = CnfNfsVenNom
+    &CnfNfsForNom = CnfNfsForNom
+    &CnfNfsUfCod = CnfNfsUfCod
+    &CnfNfsCidNom = CnfNfsCidNom
+    &CnfNfsBold = CnfNfsBold
+    &CnfNfsUnderline = CnfNfsUnderline
+    &CnfNfsItalic = CnfNfsItalic
+    &CnfNfsCorLinha = CnfNfsCorLinha
+    &CnfNfsCorFonte = CnfNfsCorFonte
+    &CnfNfsFont = CnfNfsFont
+    &CnfNfsNumPed = CnfNfsNumPed
+    &CnfNfsSts = CnfNfsSts
+    &CnfNfsBseIcms = CnfNfsBseIcms
+    &CnfNfsVlrIcms = CnfNfsVlrIcms
+    &CnfNfsBseSt = CnfNfsBseSt
+    &CnfNfsVlrSt = CnfNfsVlrSt
+    &CnfNfsFrete = CnfNfsFrete
+    &CnfNfsOutDsp = CnfNfsOutDsp
+    &CnfNfsDsc = CnfNfsDsc
+    &CnfNfsBseClcIpi = CnfNfsBseClcIpi
+    &CnfNfsVlrIpi = CnfNfsVlrIpi
+
+ endfor
+
+  NfsNum.Visible       = &CnfNfsNum
+  NfsDtaEms.Visible    = &CnfNfsDtaEms
+  NfsSer.Visible       = &CnfNfsSer
+  NfsCliNom.Visible    = &CnfNfsCli
+  NfsVlrTotNf.Visible  = &CnfNfsTotNf
+  NfsVlrTotPrd.Visible = &CnfNfsTotPrd
+  NfsTipTrnDsc.Visible = &CnfNfsTpTrn
+  NfsVenNom.Visible    = &CnfNfsVenNom
+  NfsTrpNom.Visible    = &CnfNfsForNom
+  NfsCliCidNom.Visible = &CnfNfsCidNom
+  NfsCliUfCod.Visible  = &CnfNfsUfCod
+  NfsNumPed.Visible    = &CnfNfsNumPed
+  NfsSts.Visible       = &CnfNfsSts
+  NfsBseClcIcms.Visible= &CnfNfsBseIcms
+  NfsVlrIcms.Visible   = &CnfNfsVlrIcms
+  NfsBseClcSt.Visible  = &CnfNfsBseSt
+  NfsVlrSt.Visible     = &CnfNfsVlrSt
+  NfsVlrFrt.Visible    = &CnfNfsFrete
+  NfsOutDsp.Visible    = &CnfNfsOutDsp
+  NfsVlrDsc.Visible    = &CnfNfsDsc
+  NfsBseClcIpi.Visible = &CnfNfsBseClcIpi
+  NfsVlrIpi.Visible    = &CnfNfsVlrIpi
+
+  if &UsrPerVenNfTot = 'N'
+     NfsVlrTotNf.Visible  = 0
+     NfsVlrTotPrd.Visible = 0
+  endif
+    
+  if &UsrPerVenNfTot = 'S'
+     NfsVlrTotNf.Visible  = 1
+     NfsVlrTotPrd.Visible = 1
+  endif
+
+  NfsNum.FontName       = &CnfNfsFont
+  NfsDtaEms.FontName    = &CnfNfsFont
+  NfsSer.FontName       = &CnfNfsFont
+  NfsCliNom.FontName    = &CnfNfsFont
+  NfsVlrTotNf.FontName  = &CnfNfsFont
+  NfsVlrTotPrd.FontName = &CnfNfsFont
+  NfsTpTrn.FontName     = &CnfNfsFont
+  NfsVenNom.FontName    = &CnfNfsFont
+  NfsTrpNom.FontName    = &CnfNfsFont
+  NfsCliCidNom.FontName = &CnfNfsFont
+  NfsCliUfCod.FontName  = &CnfNfsFont
+  NfsNumPed.FontName    = &CnfNfsFont
+  NfsSts.FontName    = &CnfNfsFont
+  NfsBseClcIcms.FontName        = &CnfNfsFont
+  NfsVlrIcms.FontName           = &CnfNfsFont
+  NfsBseClcSt.FontName          = &CnfNfsFont
+  NfsVlrSt.FontName             = &CnfNfsFont
+  NfsVlrFrt.FontName            = &CnfNfsFont
+  NfsOutDsp.FontName         = &CnfNfsFont
+  NfsVlrDsc.FontName         = &CnfNfsFont
+  NfsBseClcIpi.FontName = &CnfNfsFont
+  NfsVlrIpi.FontName    = &CnfNfsFont
+
+  NfsNum.FontBold       = &CnfNfsBold
+  NfsDtaEms.FontBold    = &CnfNfsBold
+  NfsSer.FontBold       = &CnfNfsBold
+  NfsCliNom.FontBold    = &CnfNfsBold
+  NfsVlrTotNf.FontBold  = &CnfNfsBold
+  NfsVlrTotPrd.FontBold = &CnfNfsBold
+  NfsTipTrnDsc.FontBold     = &CnfNfsBold
+  NfsVenNom.FontBold    = &CnfNfsBold
+  NfsTrpNom.FontBold    = &CnfNfsBold
+  NfsCliCidNom.FontBold = &CnfNfsBold
+  NfsCliUfCod.FontBold  = &CnfNfsBold
+  NfsNumPed.FontBold    = &CnfNfsBold
+  NfsSts.FontBold    = &CnfNfsBold
+  NfsBseClcIpi.FontBold = &CnfNfsBold
+  NfsVlrIpi.FontBold    = &CnfNfsBold
+  NfsBseClcIcms.FontBold       = &CnfNfsBold
+  NfsVlrIcms.FontBold          = &CnfNfsBold
+  NfsBseClcSt.FontBold         = &CnfNfsBold
+  NfsVlrSt.FontBold            = &CnfNfsBold
+  NfsVlrFrt.FontBold            = &CnfNfsBold
+  NfsOutDsp.FontBold        = &CnfNfsBold
+  NfsVlrDsc.FontBold        = &CnfNfsBold
+
+  NfsNum.FontItalic       = &CnfNfsItalic
+  NfsDtaEms.FontItalic    = &CnfNfsItalic
+  NfsSer.FontItalic       = &CnfNfsItalic
+  NfsCliNom.FontItalic    = &CnfNfsItalic
+  NfsVlrTotNf.FontItalic  = &CnfNfsItalic
+  NfsVlrTotPrd.FontItalic = &CnfNfsItalic
+  NfsTipTrnDsc.FontItalic     = &CnfNfsItalic
+  NfsVenNom.FontItalic    = &CnfNfsItalic
+  NfsTrpNom.FontItalic    = &CnfNfsItalic
+  NfsCliCidNom.FontItalic = &CnfNfsItalic
+  NfsCliUfCod.FontItalic  = &CnfNfsItalic
+  NfsNumPed.FontItalic    = &CnfNfsItalic
+  NfsSts.FontItalic    = &CnfNfsItalic
+  NfsBseClcIcms.FontItalic     = &CnfNfsItalic
+  NfsVlrIcms.FontItalic        = &CnfNfsItalic
+  NfsBseClcSt.FontItalic       = &CnfNfsItalic
+  NfsVlrSt.FontItalic          = &CnfNfsItalic
+  NfsVlrFrt.FontItalic         = &CnfNfsItalic
+  NfsOutDsp.FontItalic      = &CnfNfsItalic
+  NfsVlrDsc.FontItalic         = &CnfNfsItalic
+  NfsBseClcIpi.FontItalic = &CnfNfsItalic
+  NfsVlrIpi.FontItalic    = &CnfNfsItalic
+
+  NfsNum.FontUnderline       = &CnfNfsUnderline
+  NfsDtaEms.FontUnderline    = &CnfNfsUnderline
+  NfsSer.FontUnderline       = &CnfNfsUnderline
+  NfsCliNom.FontUnderline    = &CnfNfsUnderline
+  NfsVlrTotNf.FontUnderline  = &CnfNfsUnderline
+  NfsVlrTotPrd.FontUnderline = &CnfNfsUnderline
+  NfsTipTrnDsc.FontUnderline     = &CnfNfsUnderline
+  NfsVenNom.FontUnderline    = &CnfNfsUnderline
+  NfsTrpNom.FontUnderline    = &CnfNfsUnderline
+  NfsCliCidNom.FontUnderline = &CnfNfsUnderline
+  NfsCliUfCod.FontUnderline  = &CnfNfsUnderline
+  NfsNumPed.FontUnderline    = &CnfNfsUnderline
+  NfsSts.FontUnderline    = &CnfNfsUnderline
+  NfsBseClcIcms.FontUnderline    = &CnfNfsUnderline
+  NfsVlrIcms.FontUnderline        = &CnfNfsUnderline
+  NfsBseClcSt.FontUnderline    = &CnfNfsUnderline
+  NfsVlrSt.FontUnderline         = &CnfNfsUnderline
+  NfsVlrFrt.FontUnderline        = &CnfNfsUnderline
+  NfsOutDsp.FontUnderline      = &CnfNfsUnderline
+  NfsVlrDsc.FontUnderline         = &CnfNfsUnderline
+  NfsBseClcIpi.FontUnderline = &CnfNfsUnderline
+  NfsVlrIpi.FontUnderline    = &CnfNfsUnderline
+
+
+  // Cores de Fundo
+  do case
+     case &CnfNfsCorLinha = 'BLK'
+
+          NfsNum.BackColor       = rgb(0,0,0)
+          NfsDtaEms.BackColor    = rgb(0,0,0)
+          NfsSer.BackColor       = rgb(0,0,0)
+          NfsCliNom.BackColor    = rgb(0,0,0)
+          NfsVlrTotNf.BackColor  = rgb(0,0,0)
+          NfsVlrTotPrd.BackColor = rgb(0,0,0)
+          NfsTipTrnDsc.BackColor     = rgb(0,0,0)
+          NfsVenNom.BackColor    = rgb(0,0,0)
+          NfsTrpNom.BackColor    = rgb(0,0,0)
+          NfsCliCidNom.BackColor = rgb(0,0,0)
+          NfsCliUfCod.BackColor  = rgb(0,0,0)
+          NfsNumPed.BackColor    = rgb(0,0,0)
+          NfsSts.BackColor    = rgb(0,0,0)
+          NfsBseClcIcms.BackColor       = rgb(0,0,0)
+          NfsVlrIcms.BackColor       = rgb(0,0,0)
+          NfsBseClcSt.BackColor       = rgb(0,0,0)
+          NfsVlrSt.BackColor       = rgb(0,0,0)
+          NfsVlrFrt.BackColor       = rgb(0,0,0)
+          NfsOutDsp.BackColor       = rgb(0,0,0)
+          NfsVlrDsc.BackColor       = rgb(0,0,0)
+          NfsBseClcIpi.BackColor    = rgb(0,0,0)
+          NfsVlrIpi.BackColor       = rgb(0,0,0)
+
+     case &CnfNfsCorLinha = 'WHT'
+
+          NfsNum.BackColor       = rgb(255,255,255)
+          NfsDtaEms.BackColor    = rgb(255,255,255)
+          NfsSer.BackColor       = rgb(255,255,255)
+          NfsCliNom.BackColor    = rgb(255,255,255)
+          NfsVlrTotNf.BackColor  = rgb(255,255,255)
+          NfsVlrTotPrd.BackColor = rgb(255,255,255)
+          NfsTipTrnDsc.BackColor     = rgb(255,255,255)
+          NfsVenNom.BackColor    = rgb(255,255,255)
+          NfsTrpNom.BackColor    = rgb(255,255,255)
+          NfsCliCidNom.BackColor = rgb(255,255,255)
+          NfsCliUfCod.BackColor  = rgb(255,255,255)
+          NfsNumPed.BackColor    = rgb(255,255,255)
+          NfsSts.BackColor    = rgb(255,255,255)
+          NfsBseClcIcms.BackColor       = rgb(255,255,255)
+          NfsVlrIcms.BackColor       = rgb(255,255,255)
+          NfsBseClcSt.BackColor       = rgb(255,255,255)
+          NfsVlrSt.BackColor       = rgb(255,255,255)
+          NfsVlrFrt.BackColor       = rgb(255,255,255)
+          NfsOutDsp.BackColor       = rgb(255,255,255)
+          NfsVlrDsc.BackColor       = rgb(255,255,255)
+          NfsBseClcIpi.BackColor    = rgb(255,255,255)
+          NfsVlrIpi.BackColor       = rgb(255,255,255)
+
+     case &CnfNfsCorLinha = 'YLW'
+
+          NfsNum.BackColor       = rgb(255,255,0)
+          NfsDtaEms.BackColor    = rgb(255,255,0)
+          NfsSer.BackColor       = rgb(255,255,0)
+          NfsCliNom.BackColor    = rgb(255,255,0)
+          NfsVlrTotNf.BackColor  = rgb(255,255,0)
+          NfsVlrTotPrd.BackColor = rgb(255,255,0)
+          NfsTipTrnDsc.BackColor     = rgb(255,255,0)
+          NfsVenNom.BackColor    = rgb(255,255,0)
+          NfsTrpNom.BackColor    = rgb(255,255,0)
+          NfsCliCidNom.BackColor = rgb(255,255,0)
+          NfsCliUfCod.BackColor  = rgb(255,255,0)
+          NfsNumPed.BackColor    = rgb(255,255,0)
+          NfsSts.BackColor    = rgb(255,255,0)
+          NfsBseClcIcms.BackColor       = rgb(255,255,0)
+          NfsVlrIcms.BackColor       = rgb(255,255,0)
+          NfsBseClcSt.BackColor       = rgb(255,255,0)
+          NfsVlrSt.BackColor       = rgb(255,255,0)
+          NfsVlrFrt.BackColor       = rgb(255,255,0)
+          NfsOutDsp.BackColor       = rgb(255,255,0)
+          NfsVlrDsc.BackColor       = rgb(255,255,0)
+          NfsBseClcIpi.BackColor    = rgb(255,255,0)
+          NfsVlrIpi.BackColor       = rgb(255,255,0)
+
+     case &CnfNfsCorLinha = 'BLU'
+
+          NfsNum.BackColor       = rgb(0,0,255)
+          NfsDtaEms.BackColor    = rgb(0,0,255)
+          NfsSer.BackColor       = rgb(0,0,255)
+          NfsCliNom.BackColor    = rgb(0,0,255)
+          NfsVlrTotNf.BackColor  = rgb(0,0,255)
+          NfsVlrTotPrd.BackColor = rgb(0,0,255)
+          NfsTipTrnDsc.BackColor     = rgb(0,0,255)
+          NfsVenNom.BackColor    = rgb(0,0,255)
+          NfsTrpNom.BackColor    = rgb(0,0,255)
+          NfsCliCidNom.BackColor = rgb(0,0,255)
+          NfsCliUfCod.BackColor  = rgb(0,0,255)
+          NfsNumPed.BackColor    = rgb(0,0,255)
+          NfsSts.BackColor    = rgb(0,0,255)
+          NfsBseClcIcms.BackColor       = rgb(0,0,255)
+          NfsVlrIcms.BackColor       = rgb(0,0,255)
+          NfsBseClcSt.BackColor       = rgb(0,0,255)
+          NfsVlrSt.BackColor       = rgb(0,0,255)
+          NfsVlrFrt.BackColor       = rgb(0,0,255)
+          NfsVlrDsc.BackColor       = rgb(0,0,255)
+          NfsOutDsp.BackColor       = rgb(0,0,255)
+          NfsBseClcIpi.BackColor    = rgb(0,0,255)
+          NfsVlrIpi.BackColor       = rgb(0,0,255)
+
+     case &CnfNfsCorLinha = 'RED'
+
+          NfsNum.BackColor       = rgb(255,0,0)
+          NfsDtaEms.BackColor    = rgb(255,0,0)
+          NfsSer.BackColor       = rgb(255,0,0)
+          NfsCliNom.BackColor    = rgb(255,0,0)
+          NfsVlrTotNf.BackColor  = rgb(255,0,0)
+          NfsVlrTotPrd.BackColor = rgb(255,0,0)
+          NfsTipTrnDsc.BackColor     = rgb(255,0,0)
+          NfsVenNom.BackColor    = rgb(255,0,0)
+          NfsTrpNom.BackColor    = rgb(255,0,0)
+          NfsCliCidNom.BackColor = rgb(255,0,0)
+          NfsCliUfCod.BackColor  = rgb(255,0,0)
+          NfsNumPed.BackColor    = rgb(255,0,0)
+          NfsSts.BackColor    = rgb(255,0,0)
+          NfsBseClcIcms.BackColor       = rgb(255,0,0)
+          NfsVlrIcms.BackColor       = rgb(255,0,0)
+          NfsBseClcSt.BackColor       = rgb(255,0,0)
+          NfsVlrSt.BackColor       = rgb(255,0,0)
+          NfsVlrFrt.BackColor       = rgb(255,0,0)
+          NfsVlrDsc.BackColor       = rgb(255,0,0)
+          NfsOutDsp.BackColor       = rgb(255,0,0)
+          NfsBseClcIpi.BackColor    = rgb(255,0,0)
+          NfsVlrIpi.BackColor       = rgb(255,0,0)
+
+     case &CnfNfsCorLinha = 'CYN'
+
+          NfsNum.BackColor       = rgb(0,255,255)
+          NfsDtaEms.BackColor    = rgb(0,255,255)
+          NfsSer.BackColor       = rgb(0,255,255)
+          NfsCliNom.BackColor    = rgb(0,255,255)
+          NfsVlrTotNf.BackColor  = rgb(0,255,255)
+          NfsVlrTotPrd.BackColor = rgb(0,255,255)
+          NfsTipTrnDsc.BackColor     = rgb(0,255,255)
+          NfsVenNom.BackColor    = rgb(0,255,255)
+          NfsTrpNom.BackColor    = rgb(0,255,255)
+          NfsCliCidNom.BackColor = rgb(0,255,255)
+          NfsCliUfCod.BackColor  = rgb(0,255,255)
+          NfsNumPed.BackColor    = rgb(0,255,255)
+          NfsSts.BackColor    = rgb(0,255,255)
+          NfsBseClcIcms.BackColor       = rgb(0,255,255)
+          NfsVlrIcms.BackColor       = rgb(0,255,255)
+          NfsBseClcSt.BackColor       = rgb(0,255,255)
+          NfsVlrSt.BackColor       = rgb(0,255,255)
+          NfsVlrFrt.BackColor       = rgb(0,255,255)
+          NfsVlrDsc.BackColor       = rgb(0,255,255)
+          NfsOutDsp.BackColor       = rgb(0,255,255)
+          NfsBseClcIpi.BackColor    = rgb(0,255,255)
+          NfsVlrIpi.BackColor       = rgb(0,255,255)
+
+     case &CnfNfsCorLinha = 'MGN'
+
+          NfsNum.BackColor       = rgb(255,0,255)
+          NfsDtaEms.BackColor    = rgb(255,0,255)
+          NfsSer.BackColor       = rgb(255,0,255)
+          NfsCliNom.BackColor    = rgb(255,0,255)
+          NfsVlrTotNf.BackColor  = rgb(255,0,255)
+          NfsVlrTotPrd.BackColor = rgb(255,0,255)
+          NfsTipTrnDsc.BackColor     = rgb(255,0,255)
+          NfsVenNom.BackColor    = rgb(255,0,255)
+          NfsTrpNom.BackColor    = rgb(255,0,255)
+          NfsCliCidNom.BackColor = rgb(255,0,255)
+          NfsCliUfCod.BackColor  = rgb(255,0,255)
+          NfsNumPed.BackColor    = rgb(255,0,255)
+          NfsSts.BackColor    = rgb(255,0,255)
+          NfsBseClcIcms.BackColor       = rgb(255,0,255)
+          NfsVlrIcms.BackColor       = rgb(255,0,255)
+          NfsBseClcSt.BackColor       = rgb(255,0,255)
+          NfsVlrSt.BackColor       = rgb(255,0,255)
+          NfsVlrFrt.BackColor       = rgb(255,0,255)
+          NfsVlrDsc.BackColor       = rgb(255,0,255)
+          NfsOutDsp.BackColor       = rgb(255,0,255)
+          NfsBseClcIpi.BackColor    = rgb(255,0,255)
+          NfsVlrIpi.BackColor       = rgb(255,0,255)
+
+     case &CnfNfsCorLinha = 'GRN' 
+
+          NfsNum.BackColor       = rgb(0,255,0)
+          NfsDtaEms.BackColor    = rgb(0,255,0)
+          NfsSer.BackColor       = rgb(0,255,0)
+          NfsCliNom.BackColor    = rgb(0,255,0)
+          NfsVlrTotNf.BackColor  = rgb(0,255,0)
+          NfsVlrTotPrd.BackColor = rgb(0,255,0)
+          NfsTipTrnDsc.BackColor     = rgb(0,255,0)
+          NfsVenNom.BackColor    = rgb(0,255,0)
+          NfsTrpNom.BackColor    = rgb(0,255,0)
+          NfsCliCidNom.BackColor = rgb(0,255,0)
+          NfsCliUfCod.BackColor  = rgb(0,255,0)
+          NfsNumPed.BackColor    = rgb(0,255,0)
+          NfsSts.BackColor    = rgb(0,255,0)
+          NfsBseClcIcms.BackColor       = rgb(0,255,0)
+          NfsVlrIcms.BackColor       = rgb(0,255,0)
+          NfsBseClcSt.BackColor       = rgb(0,255,0)
+          NfsVlrSt.BackColor       = rgb(0,255,0)
+          NfsVlrFrt.BackColor       = rgb(0,255,0)
+          NfsVlrDsc.BackColor       = rgb(0,255,0)
+          NfsOutDsp.BackColor       = rgb(0,255,0)
+          NfsBseClcIpi.BackColor    = rgb(0,255,0)
+          NfsVlrIpi.BackColor       = rgb(0,255,0)
+
+     case &CnfNfsCorLinha = 'BRW'
+
+          NfsNum.BackColor       = rgb(165,42,42)
+          NfsDtaEms.BackColor    = rgb(165,42,42)
+          NfsSer.BackColor       = rgb(165,42,42)
+          NfsCliNom.BackColor    = rgb(165,42,42)
+          NfsVlrTotNf.BackColor  = rgb(165,42,42)
+          NfsVlrTotPrd.BackColor = rgb(165,42,42)
+          NfsTipTrnDsc.BackColor     = rgb(165,42,42)
+          NfsVenNom.BackColor    = rgb(165,42,42)
+          NfsTrpNom.BackColor    = rgb(165,42,42)
+          NfsCliCidNom.BackColor = rgb(165,42,42)
+          NfsCliUfCod.BackColor  = rgb(165,42,42)
+          NfsNumPed.BackColor    = rgb(165,42,42)
+          NfsSts.BackColor    = rgb(165,42,42)
+          NfsBseClcIcms.BackColor       = rgb(165,42,42)
+          NfsVlrIcms.BackColor       = rgb(165,42,42)
+          NfsBseClcSt.BackColor       = rgb(165,42,42)
+          NfsVlrSt.BackColor       = rgb(165,42,42)
+          NfsVlrFrt.BackColor       = rgb(165,42,42)
+          NfsVlrDsc.BackColor       = rgb(165,42,42)
+          NfsOutDsp.BackColor       = rgb(165,42,42)
+          NfsBseClcIpi.BackColor    = rgb(165,42,42)
+          NfsVlrIpi.BackColor       = rgb(165,42,42)
+
+  endcase
+
+
+
+  do case
+     case &CnfNfsCorFonte = 'BLK'
+
+          NfsNum.ForeColor       = rgb(0,0,0)
+          NfsDtaEms.ForeColor    = rgb(0,0,0)
+          NfsSer.ForeColor       = rgb(0,0,0)
+          NfsCliNom.ForeColor    = rgb(0,0,0)
+          NfsVlrTotNf.ForeColor  = rgb(0,0,0)
+          NfsVlrTotPrd.ForeColor = rgb(0,0,0)
+          NfsTipTrnDsc.ForeColor     = rgb(0,0,0)
+          NfsVenNom.ForeColor    = rgb(0,0,0)
+          NfsTrpNom.ForeColor    = rgb(0,0,0)
+          NfsCliCidNom.ForeColor = rgb(0,0,0)
+          NfsCliUfCod.ForeColor  = rgb(0,0,0)
+          NfsNumPed.ForeColor    = rgb(0,0,0)
+          NfsSts.ForeColor    = rgb(0,0,0)
+          NfsBseClcIcms.ForeColor    = rgb(0,0,0)
+          NfsVlrIcms.ForeColor    = rgb(0,0,0)
+          NfsBseClcSt.ForeColor    = rgb(0,0,0)
+          NfsVlrSt.ForeColor    = rgb(0,0,0)
+          NfsVlrFrt.ForeColor    = rgb(0,0,0)
+          NfsVlrDsc.ForeColor    = rgb(0,0,0)
+          NfsOutDsp.ForeColor    = rgb(0,0,0)
+          NfsBseClcIpi.ForeColor    = rgb(0,0,0)
+          NfsVlrIpi.ForeColor       = rgb(0,0,0)
+
+     case &CnfNfsCorFonte = 'WHT'
+
+          NfsNum.ForeColor       = rgb(255,255,255)
+          NfsDtaEms.ForeColor    = rgb(255,255,255)
+          NfsSer.ForeColor       = rgb(255,255,255)
+          NfsCliNom.ForeColor    = rgb(255,255,255)
+          NfsVlrTotNf.ForeColor  = rgb(255,255,255)
+          NfsVlrTotPrd.ForeColor = rgb(255,255,255)
+          NfsTipTrnDsc.ForeColor     = rgb(255,255,255)
+          NfsVenNom.ForeColor    = rgb(255,255,255)
+          NfsTrpNom.ForeColor    = rgb(255,255,255)
+          NfsCliCidNom.ForeColor = rgb(255,255,255)
+          NfsCliUfCod.ForeColor  = rgb(255,255,255)
+          NfsNumPed.ForeColor    = rgb(255,255,255)
+          NfsSts.ForeColor    = rgb(255,255,255)
+          NfsBseClcIcms.ForeColor    = rgb(255,255,255)
+          NfsVlrIcms.ForeColor    = rgb(255,255,255)
+          NfsBseClcSt.ForeColor    = rgb(255,255,255)
+          NfsVlrSt.ForeColor    = rgb(255,255,255)
+          NfsVlrFrt.ForeColor    = rgb(255,255,255)
+          NfsVlrDsc.ForeColor    = rgb(255,255,255)
+          NfsOutDsp.ForeColor    = rgb(255,255,255)
+          NfsBseClcIpi.ForeColor    = rgb(255,255,255)
+          NfsVlrIpi.ForeColor       = rgb(255,255,255)
+
+     case &CnfNfsCorFonte = 'YLW'
+
+          NfsNum.ForeColor       = rgb(255,255,0)
+          NfsDtaEms.ForeColor    = rgb(255,255,0)
+          NfsSer.ForeColor       = rgb(255,255,0)
+          NfsCliNom.ForeColor    = rgb(255,255,0)
+          NfsVlrTotNf.ForeColor  = rgb(255,255,0)
+          NfsVlrTotPrd.ForeColor = rgb(255,255,0)
+          NfsTipTrnDsc.ForeColor     = rgb(255,255,0)
+          NfsVenNom.ForeColor    = rgb(255,255,0)
+          NfsTrpNom.ForeColor    = rgb(255,255,0)
+          NfsCliCidNom.ForeColor = rgb(255,255,0)
+          NfsCliUfCod.ForeColor  = rgb(255,255,0)
+          NfsNumPed.ForeColor    = rgb(255,255,0)
+          NfsSts.ForeColor    = rgb(255,255,0)
+          NfsBseClcIcms.ForeColor    = rgb(255,255,0)
+          NfsVlrIcms.ForeColor    = rgb(255,255,0)
+          NfsBseClcSt.ForeColor    = rgb(255,255,0)
+          NfsVlrSt.ForeColor    = rgb(255,255,0)
+          NfsVlrFrt.ForeColor    = rgb(255,255,0)
+          NfsVlrDsc.ForeColor    = rgb(255,255,0)
+          NfsOutDsp.ForeColor    = rgb(255,255,0)
+          NfsBseClcIpi.ForeColor    = rgb(255,255,0)
+          NfsVlrIpi.ForeColor       = rgb(255,255,0)
+
+     case &CnfNfsCorFonte = 'BLU'
+
+          NfsNum.ForeColor       = rgb(0,0,255)
+          NfsDtaEms.ForeColor    = rgb(0,0,255)
+          NfsSer.ForeColor       = rgb(0,0,255)
+          NfsCliNom.ForeColor    = rgb(0,0,255)
+          NfsVlrTotNf.ForeColor  = rgb(0,0,255)
+          NfsVlrTotPrd.ForeColor = rgb(0,0,255)
+          NfsTipTrnDsc.ForeColor     = rgb(0,0,255)
+          NfsVenNom.ForeColor    = rgb(0,0,255)
+          NfsTrpNom.ForeColor    = rgb(0,0,255)
+          NfsCliCidNom.ForeColor = rgb(0,0,255)
+          NfsCliUfCod.ForeColor  = rgb(0,0,255)
+          NfsNumPed.ForeColor    = rgb(0,0,255)
+          NfsSts.ForeColor    = rgb(0,0,255)
+          NfsBseClcIcms.ForeColor    = rgb(0,0,255)
+          NfsVlrIcms.ForeColor    = rgb(0,0,255)
+          NfsBseClcSt.ForeColor    = rgb(0,0,255)
+          NfsVlrSt.ForeColor    = rgb(0,0,255)
+          NfsVlrFrt.ForeColor    = rgb(0,0,255)
+          NfsVlrDsc.ForeColor    = rgb(0,0,255)
+          NfsOutDsp.ForeColor    = rgb(0,0,255)
+          NfsBseClcIpi.ForeColor    = rgb(0,0,255)
+          NfsVlrIpi.ForeColor       = rgb(0,0,255)
+
+     case &CnfNfsCorFonte = 'RED'
+
+          NfsNum.ForeColor       = rgb(255,0,0)
+          NfsDtaEms.ForeColor    = rgb(255,0,0)
+          NfsSer.ForeColor       = rgb(255,0,0)
+          NfsCliNom.ForeColor    = rgb(255,0,0)
+          NfsVlrTotNf.ForeColor  = rgb(255,0,0)
+          NfsVlrTotPrd.ForeColor = rgb(255,0,0)
+          NfsTipTrnDsc.ForeColor     = rgb(255,0,0)
+          NfsVenNom.ForeColor    = rgb(255,0,0)
+          NfsTrpNom.ForeColor    = rgb(255,0,0)
+          NfsCliCidNom.ForeColor = rgb(255,0,0)
+          NfsCliUfCod.ForeColor  = rgb(255,0,0)
+          NfsNumPed.ForeColor    = rgb(255,0,0)
+          NfsSts.ForeColor    = rgb(255,0,0)
+          NfsBseClcIcms.ForeColor    = rgb(255,0,0)
+          NfsVlrIcms.ForeColor    = rgb(255,0,0)
+          NfsBseClcSt.ForeColor    = rgb(255,0,0)
+          NfsVlrSt.ForeColor    = rgb(255,0,0)
+          NfsVlrFrt.ForeColor    = rgb(255,0,0)
+          NfsVlrDsc.ForeColor    = rgb(255,0,0)
+          NfsOutDsp.ForeColor    = rgb(255,0,0)
+          NfsBseClcIpi.ForeColor    = rgb(255,0,0)
+          NfsVlrIpi.ForeColor       = rgb(255,0,0)
+
+     case &CnfNfsCorFonte = 'CYN'
+
+          NfsNum.ForeColor       = rgb(0,255,255)
+          NfsDtaEms.ForeColor    = rgb(0,255,255)
+          NfsSer.ForeColor       = rgb(0,255,255)
+          NfsCliNom.ForeColor    = rgb(0,255,255)
+          NfsVlrTotNf.ForeColor  = rgb(0,255,255)
+          NfsVlrTotPrd.ForeColor = rgb(0,255,255)
+          NfsTipTrnDsc.ForeColor     = rgb(0,255,255)
+          NfsVenNom.ForeColor    = rgb(0,255,255)
+          NfsTrpNom.ForeColor    = rgb(0,255,255)
+          NfsCliCidNom.ForeColor = rgb(0,255,255)
+          NfsCliUfCod.ForeColor  = rgb(0,255,255)
+          NfsNumPed.ForeColor    = rgb(0,255,255)
+          NfsSts.ForeColor    = rgb(0,255,255)
+          NfsBseClcIcms.ForeColor    = rgb(0,255,255)
+          NfsVlrIcms.ForeColor    = rgb(0,255,255)
+          NfsBseClcSt.ForeColor    = rgb(0,255,255)
+          NfsVlrSt.ForeColor    = rgb(0,255,255)
+          NfsVlrFrt.ForeColor    = rgb(0,255,255)
+          NfsVlrDsc.ForeColor    = rgb(0,255,255)
+          NfsOutDsp.ForeColor    = rgb(0,255,255)
+          NfsBseClcIpi.ForeColor    = rgb(0,255,255)
+          NfsVlrIpi.ForeColor       = rgb(0,255,255)
+
+     case &CnfNfsCorFonte = 'MGN'
+
+          NfsNum.ForeColor       = rgb(255,0,255)
+          NfsDtaEms.ForeColor    = rgb(255,0,255)
+          NfsSer.ForeColor       = rgb(255,0,255)
+          NfsCliNom.ForeColor    = rgb(255,0,255)
+          NfsVlrTotNf.ForeColor  = rgb(255,0,255)
+          NfsVlrTotPrd.ForeColor = rgb(255,0,255)
+          NfsTipTrnDsc.ForeColor     = rgb(255,0,255)
+          NfsVenNom.ForeColor    = rgb(255,0,255)
+          NfsTrpNom.ForeColor    = rgb(255,0,255)
+          NfsCliCidNom.ForeColor = rgb(255,0,255)
+          NfsCliUfCod.ForeColor  = rgb(255,0,255)
+          NfsNumPed.ForeColor    = rgb(255,0,255)
+          NfsSts.ForeColor    = rgb(255,0,255)
+          NfsBseClcIcms.ForeColor    = rgb(255,0,255)
+          NfsVlrIcms.ForeColor    = rgb(255,0,255)
+          NfsBseClcSt.ForeColor    = rgb(255,0,255)
+          NfsVlrSt.ForeColor    = rgb(255,0,255)
+          NfsVlrFrt.ForeColor    = rgb(255,0,255)
+          NfsVlrDsc.ForeColor    = rgb(255,0,255)
+          NfsOutDsp.ForeColor    = rgb(255,0,255)
+          NfsBseClcIpi.ForeColor    = rgb(255,0,255)
+          NfsVlrIpi.ForeColor       = rgb(255,0,255)
+
+     case &CnfNfsCorFonte = 'GRN' 
+
+          NfsNum.ForeColor       = rgb(0,255,0)
+          NfsDtaEms.ForeColor    = rgb(0,255,0)
+          NfsSer.ForeColor       = rgb(0,255,0)
+          NfsCliNom.ForeColor    = rgb(0,255,0)
+          NfsVlrTotNf.ForeColor  = rgb(0,255,0)
+          NfsVlrTotPrd.ForeColor = rgb(0,255,0)
+          NfsTipTrnDsc.ForeColor     = rgb(0,255,0)
+          NfsVenNom.ForeColor    = rgb(0,255,0)
+          NfsTrpNom.ForeColor    = rgb(0,255,0)
+          NfsCliCidNom.ForeColor = rgb(0,255,0)
+          NfsCliUfCod.ForeColor  = rgb(0,255,0)
+          NfsNumPed.ForeColor    = rgb(0,255,0)
+          NfsSts.ForeColor    = rgb(0,255,0)
+          NfsBseClcIcms.ForeColor    = rgb(0,255,0)
+          NfsVlrIcms.ForeColor    = rgb(0,255,0)
+          NfsBseClcSt.ForeColor    = rgb(0,255,0)
+          NfsVlrSt.ForeColor    = rgb(0,255,0)
+          NfsVlrFrt.ForeColor    = rgb(0,255,0)
+          NfsVlrDsc.ForeColor    = rgb(0,255,0)
+          NfsOutDsp.ForeColor    = rgb(0,255,0)
+          NfsBseClcIpi.ForeColor    = rgb(0,255,0)
+          NfsVlrIpi.ForeColor       = rgb(0,255,0)
+
+     case &CnfNfsCorFonte = 'BRW'
+
+          NfsNum.ForeColor       = rgb(165,42,42)
+          NfsDtaEms.ForeColor    = rgb(165,42,42)
+          NfsSer.ForeColor       = rgb(165,42,42)
+          NfsCliNom.ForeColor    = rgb(165,42,42)
+          NfsVlrTotNf.ForeColor  = rgb(165,42,42)
+          NfsVlrTotPrd.ForeColor = rgb(165,42,42)
+          NfsTipTrnDsc.ForeColor     = rgb(165,42,42)
+          NfsVenNom.ForeColor    = rgb(165,42,42)
+          NfsTrpNom.ForeColor    = rgb(165,42,42)
+          NfsCliCidNom.ForeColor = rgb(165,42,42)
+          NfsCliUfCod.ForeColor  = rgb(165,42,42)
+          NfsNumPed.ForeColor    = rgb(165,42,42)
+          NfsSts.ForeColor    = rgb(165,42,42)
+          NfsBseClcIcms.ForeColor    = rgb(165,42,42)
+          NfsVlrIcms.ForeColor    = rgb(165,42,42)
+          NfsBseClcSt.ForeColor    = rgb(165,42,42)
+          NfsVlrSt.ForeColor    = rgb(165,42,42)
+          NfsVlrFrt.ForeColor    = rgb(165,42,42)
+          NfsVlrDsc.ForeColor    = rgb(165,42,42)
+          NfsOutDsp.ForeColor    = rgb(165,42,42)
+          NfsBseClcIpi.ForeColor    = rgb(165,42,42)
+          NfsVlrIpi.ForeColor       = rgb(165,42,42)
+
+  endcase
 endsub
 
+Event 'Cancelar'
+    if not null(NfsNum)
+        If NfsSts = 'E'
+            &Mensagem = 'Deseja realmente CANCELAR a nota fiscal nº. ' + trim(str(NfsNum)) + ' ?'
+            Confirm(&Mensagem, N)
+            If Confirmed()
+                Call(PCancelaNF, &Logon,NfsNum,NfsSer,NfsNumPed)
+                refresh keep
+            endif
+        Else
+            Msg('Essa NF não pode ser Cancelada pois não está com status Enviada!')
+        EndIf
+    Else
+        Msg('Favor selecionar uma NF para Cancelar!')
+    endif
+EndEvent  // 'Cancelar'
 
-Sub 'opr'
-    for each
-       where CfopSeq = &NfsCfopSeq
-            &CfopFinEmi = CfopFinEmi
-    endfor
-endsub
+
+Event 'nfe'
+&SdtNota.Clear()
+if not null(NfsNum)
+
+  confirm('Deseja Gerar o arquivo para a Nota Fiscal Eletrônica ?')
+  if confirmed()
+      for each line 
+         Call(PVerStsNF, &Logon, NfsNum, NfsSer, &NfsSts2)
+         if &Esc = 'S' and &NfsSts2 <> 'C'
+    
+               &SdtNotaItem = new SdtNota.SdtNotaItem()
+               &SdtNotaItem.NfsNum = NfsNum
+               &SdtNotaItem.NfsSer = NfsSer
+               &SdtNota.Add(&SdtNotaItem)
+   
+    
+         endif
+      endfor
+  endif
+
+  if &SdtNota.Count > 0
+    
+    if null(&EmpDirTxtNfe)
+        csharp string dirAtual = System.Windows.Forms.Application.StartupPath;
+        csharp [!&diretorio!] = dirAtual;
+    
+        &diretorio += '\TXT NFE'
+    
+        call('gxSelDir',&Arquivo,&diretorio,'Selecione o diretório',0)
 
 
-sub'cfop'
-    for each
-       where CfopSeq = &NfiCfopSeq
-         &CfopModBseIcms = CfopModBseIcms
-         &CfopModBseIcmsSt = CfopModBseIcmsSt
-         &CfopBseIcms = CfopBseIcms
-         &CfopBseIcmsSt = CfopBseIcmsSt
-         &CfopEnqCod = CfopEnqCod 
-         &CfopMotDesoneracao = CfopMotDesoneracao         
-    
-    endfor
-    
-    for each
-       where PrdCod = &PrdCod
-    
-          &PrdcEan = PrdcEan.Trim()
-          &PrdcEanTrib = PrdcEanTrib.Trim()
-          &PrdCodBarras = PrdCodBarras.Trim()
-    
-           do case
-               case &CliUfCod = 'AC'
-                  &PerSt = PrdAcMva
-               case &CliUfCod = 'AL'
-                  &PerSt = PrdAlMva
-               case &CliUfCod = 'AP'
-                  &PerSt = PrdApMva
-               case &CliUfCod = 'AM'
-                  &PerSt = PrdAmMva
-               case &CliUfCod = 'BA'
-                  &PerSt = PrdBaMva
-               case &CliUfCod = 'CE'
-                  &PerSt = PrdCeMva
-               case &CliUfCod = 'DF'
-                  &PerSt = PrdDfMva
-               case &CliUfCod = 'ES'
-                  &PerSt = PrdEsMva
-               case &CliUfCod = 'GO'
-                  &PerSt = PrdGoMva
-               case &CliUfCod = 'MG'
-                  &PerSt = PrdMgMva
-               case &CliUfCod = 'MT'
-                  &PerSt = PrdMtMva
-               case &CliUfCod = 'MS'
-                  &PerSt = PrdMsMva
-               case &CliUfCod = 'PA'
-                  &PerSt = PrdPaMva
-               case &CliUfCod = 'PB'
-                  &PerSt = PrdPbMva
-               case &CliUfCod = 'PI'
-                  &PerSt = PrdPiMva
-               case &CliUfCod = 'PR'
-                  &PerSt = PrdPrMva 
-               case &CliUfCod = 'RJ'
-                  &PerSt = PrdRjMva            
-               case &CliUfCod = 'RS'
-                  &PerSt = PrdRsMva
-               case &CliUfCod = 'RN'
-                  &PerSt = PrdRnMva
-               case &CliUfCod = 'RR'
-                  &PerSt = PrdRrMva
-               case &CliUfCod = 'RO'
-                  &PerSt = PrdRsMva
-               case &CliUfCod = 'SC'
-                  &PerSt = PrdScMva
-               case &CliUfCod = 'SP'
-                  &PerSt = PrdSpMva
-               case &CliUfCod = 'TO'
-                  &PerSt = PrdToMva
-               case &CliUfCod = 'SE'
-                  &PerSt = PrdSeMva
-           endcase   
-    endfor
-    
-    // Alteração dia 26/12/2017: (Convenio ICMS 52/2017) segundo Escritório Contábil Cunha – A partir de 01/01/2018 (Se for verdadeira todas as condições abaixo, zera a % do MVA pois não utiliza no novo cálculo)
-    If &CliTp = 'J' and &CliIeIse = 'C' and not Null(&CliIes) and &NfsConsFinal = 'S' and &EmpUf <> &CliUfCod
-        &PerSt = 0
-    EndIf
+         if not null(&arquivo)
 
-endsub
+             call(PNfe4,&Logon,&SdtNota,&arquivo)
+
+             Msg('Gerado com sucesso !!!')
+
+        endif
+
+    else
+         &arquivo = &EmpDirTxtNfe
+
+         call(PNfe4,&Logon,&SdtNota,&arquivo)
+  
+         msg('Arquivo Gerado no Diretório: '+&arquivo.Trim())
+
+    endif
+
+    REFRESH
+
+     
+  else
+      msg('Selecione ao menos uma nota fiscal')
+  endif
+
+endif
+EndEvent  // 'nfe'
+
+Event 'Dsp'
+if not null(NfsNum)
+
+     &LOGHST = 'NOTA FISCAL DE VENDA: '+TRIM(STR(NfsNum))+' - '+TRIM(NfsSer)
+     PLogOperacao.Call(&logon.UsrCod,'DSP',&LOGHST)
+
+     call(WNotaFiscal3,&Logon,NfsNum,NfsSer)
+
+endif
+EndEvent  // 'Dsp'
+
+Event 'DANFE'
+call(RDanfe,NfsNum,NfsSer)
+EndEvent  // 'DANFE'
 
 
 sub'tipo'
-    for each
-        where TpEndSeq = &EmpTpEndSeq
-            &TipoEnd = TpEndDsc.Trim()
-    endfor
-endsub
-
-
-sub'tipoend'
-    for each
-       where TpEndSeq = &CliTpEndSeq
-       &CliTipoEnd = TpEndDsc.Trim()
-    endfor
-    
-    for each
-       where TpEndSeq = &CliTpEndEntSeq
-       &CliTipoEndEnt = TpEndDsc.Trim()
-    endfor
-endsub
-
-
-sub'Autorizações'
-    for each
-       where EmpCod = &Logon.EmpCod    
-        
-           &EmpAutDoc = EmpAutDoc
-           &EmpAutDoc = StrReplace(&EmpAutDoc,'-','')
-           &EmpAutDoc = StrReplace(&EmpAutDoc,',','')
-           &EmpAutDoc = StrReplace(&EmpAutDoc,'*','')
-           &EmpAutDoc = StrReplace(&EmpAutDoc,'.','')
-           &EmpAutDoc = StrReplace(&EmpAutDoc,'#','')
-           &EmpAutDoc = StrReplace(&EmpAutDoc,'/','')
-           &EmpAutDoc = StrReplace(&EmpAutDoc,' ','')
-                   
-           if EmpAutTp = 'J'
-              &Linha = 'G50A|'+&EmpAutDoc.Trim()
-           else
-              &Linha = 'G50B|'+&EmpAutDoc.Trim()
-           endif
-        
-           do 'tira_car'    
-    endfor
-endsub
-
-
-sub'cest'
-
-    for each
-        where PrdCod = &PrdCod    
-            &NcmCod = PrdNcmCod
-            &NcmEx  = PrdNcmEx
-    endfor
-    
-    for each
-        where NcmCod = &NcmCod
-        where NcmEx = &NcmEx
-    
-        &CestCod = CestCod
-        &CestCod = strreplace(&CestCod,'.','')
-    endfor
+for each
+   where TpEndSeq = &EmpTpEndSeq
+   &TipoEnd = TpEndDsc.Trim()
+endfor
 endsub
