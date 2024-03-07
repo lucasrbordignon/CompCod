@@ -63,7 +63,7 @@ for each PedCod
 endfor
 
 for each PedCod
-    where PedCod = &PedCod
+  where PedCod = &PedCod
 
     &PedCreCod      = PedCreCod
     &PedAcr         = PedAcr
@@ -304,9 +304,9 @@ for each PedCod
            Else
                 &SdtNfProItem.NfiOrdCompra = &PedOrdCompra
            EndIf
-
-           &SdtNfProItem.NfiOrdCompraSeq = &SdtPdi.PdiOrdCompraSeq
- 
+    
+//          &SdtNfProItem.NfiOrdCompraSeq = &SdtPdi.PdiOrdCompraSeq
+           
            &PdiQtd = &SdtPdi.PdiQtd
            &PdiVlrUnt = &SdtPdi.PdiVlrUnt
     
@@ -357,14 +357,14 @@ for each PedCod
                &SdtNfProItem.NfiObs += '\ ' + 'Ord. Compra = ' + trim(&SdtNfProItem.NfiOrdCompra) 
            EndIf
            
+           &NfiVlrIpiDev = 0
+    
+            if &PedTipTrnNOP = 3 or &PedTipTrnNOP = 4 // Calcula IPI devolvido se for Devolução de Venda ou Devolução de Compra ||&PedTipTrn = 2 or &PedTipTrn = 9
+                PCalcNfDev.Call(&Logon, &PedNumNfDev,&PedSerieNfDev,&PerDev,&PedTipTrnNOP,&PdiPrdCod,&PdiQtd,&NfiVlrIpiDev) 
+               &SdtNfProItem.NfiPerDev = &PerDev
     
            do'CalcIpi'
 
-           &NfiVlrIpiDev = 0
-    
-            if &PedTipTrnNOP = 3 or &PedTipTrnNOP = 4 // Calcula IPI devolvido se for Devolução de Venda ou Devolução de  Compra        ||&PedTipTrn = 2 or &PedTipTrn = 9 
-                PCalcNfDev.Call(&Logon, &PedNumNfDev,&PedSerieNfDev,&PerDev,&PedTipTrnNOP,&PdiPrdCod,&PdiQtd,&NfiVlrIpiDev) 
-               &SdtNfProItem.NfiPerDev = &PerDev
                &SdtNfProItem.NfiVlrIpiDev = &NfiVlrIpiDev
             endif
     
@@ -476,19 +476,19 @@ for each PedCod
            If &EmpTpMovStqCcr = 'C' // Só irá somar os produto no total das parcelas se a transação estiver marcada para movimentar contas a receber
                 If &SdtPdi.PdiCfopMovFin = 'S'
 
-                    If &CondRatIPI = 0
-                        &NfsTotPar  += &SdtNfProItem.NfiVlrTot 
-                    Else
-                        &NfsTotPar  += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi  // Tira o Valor do IPI para depois colocar na primeira parcela
-                    EndIf
+                  If &CondRatIPI = 0
+                  	&NfsTotPar += &SdtNfProItem.NfiVlrTot
+                  Else
+                    &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
+                 	EndIf
 
                 EndIf
            Else
-                If &CondRatIPI = 0
-                    &NfsTotPar  += &SdtNfProItem.NfiVlrTot 
-                Else
-                    &NfsTotPar  += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi  // Tira o Valor do IPI para depois colocar na primeira parcela
-                EndIf
+            	If &CondRatIPI = 0
+                &NfsTotPar += &SdtNfProItem.NfiVlrTot
+              Else
+                &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
+              EndIf
            EndIf                    
 
            &SdtNf.NfsBseClcIcms += &SdtNfProItem.NfiBseClcIcms
@@ -577,7 +577,7 @@ for each PedCod
   
     do'obs'    
 
-    if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &NfsTotPar > 0
+if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &NfsTotPar > 0
           &SdtNfPar.Clear()
 
           if &EmpCalcParc = 1
@@ -3499,7 +3499,7 @@ sub 'DividePed'
 
             else
 
-                   &Valor = round(PdiVlrUnt * &CreVlr / 100,2)      //PUFTOYS
+                   &Valor = round(PdiVlrUnt * &CreVlr / 100,3)
                    &Valor2 = PdiVlrUnt - &Valor
                    &PdiDsc = 0
 
@@ -3652,7 +3652,6 @@ Sub 'UltNfCompra'
             Exit
     EndFor
 EndSub
-
 
 Sub'CondPgtoIpi'
 
