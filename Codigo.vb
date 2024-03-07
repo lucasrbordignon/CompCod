@@ -1,4 +1,4 @@
-
+ 
 Msg("Montagem Txt... Nota Fiscal Eletrônica",status)
 
 for each
@@ -556,7 +556,7 @@ for &SdtNotaItem in &SdtNota
 
                &linha += '|'+trim(str(NfiIndTot))             // N  1     Indica se valor do item entra no valor total
                &linha += '|' + trim(NfiOrdCompra)            // C  15      (xPed)           Número do Pedido de Compra
-               &linha += '|' + Trim(Str(NfiSeq))              // N   6      (nItemPed)       Item do Pedido de Compra
+               &linha += '|' + Trim(NfiOrdCompraSeq)              // N   6      (nItemPed)       Item do Pedido de Compra
                &Linha += '|'+trim(NfiFCI)                     // C36      Numero do FCI
                &Linha += '|'                                  // C6       CODIGO NVE
                               
@@ -621,7 +621,7 @@ for &SdtNotaItem in &SdtNota
                      where NfsSer = &NfsSer
                      where NfiSeq = &NfiSeq
                      where NfiImpSeq = &NfiImpSeq
-                      
+
                        &Linha = 'I25|' + trim(str(NfiImpAdcNro,3))                 // N   1 - 3     (nAdicao)      Numero da Adição
                        &Linha += '|' + trim(str(NfiImpAdcSeq,3))                   // N   1 - 3     (nSeqAdicC)    Numero sequencial do item dentro da Adição
                        &Linha += '|' + trim(NfiImpAdcFab)                          // C   1 - 60    (cFabricante)  Código do fabricante estrangeiro
@@ -631,7 +631,7 @@ for &SdtNotaItem in &SdtNota
                        do 'tira_car'
                    endfor    
                endfor
-
+    
                &NfiVlrPis = NfiVlrPis
                &NfiVlrCOF = NfiVlrCof
 
@@ -709,9 +709,9 @@ for &SdtNotaItem in &SdtNota
                      &linha += '|0.00'
                     endif
 
-                    &linha += '|'+trim(str(NfiBseClcIcms,15,2))      //   N    15  2  Valor do BC do ICMS
-                    &linha += '|'+trim(str(NfiAlqIcms,5,2))          //   N     5  2  Aliquota do imposto
-                    &linha += '|'+trim(str(NfiVlrIcms,15,2))         //   N    15  2  Valor do ICMS
+                    &linha += '|'+trim(str(NfiBseClcIcms,15,2))      //   N    15  2   Valor do BC do ICMS
+                    &linha += '|'+trim(str(NfiAlqIcms,5,2))          //   N     5  2   Aliquota do imposto
+                    &linha += '|'+trim(str(NfiVlrIcms,15,2))         //   N    15  2   Valor do ICMS
                     &linha += '|'+trim(str(NfiIcmsDes,10,2))         //   N    15 2   Valor do ICMS desonerado
                     &linha += '|'+trim(&CfopMotDesoneracao)          //   N    1      Motivo desoneração 
                     &linha += '|'                                    //   N   13  2   (vBCFCP)         Valor da Base de Calculo do Fundo de Combate a pobreza
@@ -1143,7 +1143,7 @@ for &SdtNotaItem in &SdtNota
                     &linha += '|'+trim(str(&CfopModBseIcmsSt))          //   N    1      Modalidade de determinação da BC do ICMS ST
                     &linha += '|'+TRIM(str(&PerSt,6,2))                 //   N    5  2   Percentual da Margem de valor Adicionado do ICMS ST(MVA)
                     &linha += '|'                                       //   N    5  2   Percentual da Redução de BC do ICMS ST 
-                    &linha += '|'+trim(str(NfiBseClcSt,15,2))           //   N   15  2   Valor da BC do ICMS ST
+                    &linha += '|'+trim(str(NfiBseClcSt,15,2))           //   N    15 2   Valor da BC do ICMS ST
                     &linha += '|'+trim(str(NfiAlqSt,5,2))               //   N     5 2   Aliquota do imposto do ICMS ST
                     &linha += '|'+trim(str(NfiVlrSt,15,2))              //   N    15 2   Valor do ICMS ST
                     &linha += '|' + trim(str(NfiVlrBseClcFCPSub,15,2))  //   N   13  2   (vBCFCPST)       Valor da Base de Calculo do FCP retido por substituição tributária
@@ -1290,13 +1290,13 @@ for &SdtNotaItem in &SdtNota
                   do 'tira_car'
 
                   If NfiVlrIpi > 0
-                     // &linha = 'O10|'+trim(str(NfiTotPrd,15,2))    //   N   15  2    Valor da base de calc. do IPI // Alterado dia 21/12/2017: Base do IPI está sem o desconto, frete, acréscimo
+                     // &linha = 'O10|'+trim(str(NfiTotPrd,15,2))   //   N   15  2    Valor da base de calc. do IPI // Alterado dia 21/12/2017: Base do IPI está sem o desconto, frete, acréscimo
                      &linha = 'O10|'+trim(str(NfiBseClcIPI ,15,2))   //   N   15  2    Valor da base de calc. do IPI
                   else
                      &linha = 'O10|0.00'                             //   N   15  2    Valor da base de calc. do IPI
                   endif
 
-                  &linha += '|'+trim(str(NfiAlqIpi,15,2))            //   N    5  2    Aliquota do IPI
+                  &linha += '|'+trim(str(NfiAlqIpi,15,2))           //   N    5  2    Aliquota do IPI
                   do 'tira_car'
                      
             else
@@ -1314,7 +1314,7 @@ for &SdtNotaItem in &SdtNota
                   do 'tira_car'
 
             endif
-
+              
             //P Grupo P – Imposto de Importação
             &linha = 'P|' + trim(str(NfiIVlrBCImp,13,2))         // N   13v 2    (vBC)         Valor BC do Imposto de Importação
             &Linha += '|' + trim(str(NfiVlrDespAdu,13,2))        // N   13v 2    (vDespAdu)    Valor despesas aduaneiras
@@ -1323,7 +1323,7 @@ for &SdtNotaItem in &SdtNota
 
             &ret = DFWPTxt(&Linha,1000)
             &ret = DFWNext()            
-            
+               
             // PIS - GRUPO de Pis tributado pela aliquota
             do case
                case NfiCstPis = '01' or NfiCstPis = '02'
@@ -1390,7 +1390,8 @@ for &SdtNotaItem in &SdtNota
                      do 'tira_car'
                   endif
                                          
-            endcase              
+            endcase
+              
 
             // Grupo de COFINS tributado pela aliquota
             do case
