@@ -108,7 +108,47 @@ event start
    &NfsHraSai = &SdtNf.NfsHraSai
    &NfsCubagem = &SdtNf.NfsCubagem
    &NfsTrpCod = &SdtNf.NfsTrpCod
+    
+   //Importação
+   for each
+     where NfsNum = &SdtNf.NfsNum
+     where NfsSer = &SdtNf.NfsSer
+     defined by NfiImpNroDI
+        
+       &SdtImpItem = new SdtImp.SdtImpItem()
+       &SdtImpItem.NfiImpNroDI        = NfiImpNroDI
+       &SdtImpItem.NfiImpDtaDI        = NfiImpDtaDI
+       &SdtImpItem.NfiImpcExportador  = NfiImpcExportador
+       &SdtImpItem.NfiImpViaTransp    = NfiImpViaTransp
+       &SdtImpItem.NfiImpVlrAFRMM     = NfiImpVlrAFRMM
+       &SdtImpItem.NfiImpTpIntermedio = NfiImpTpIntermedio
+       &SdtImpItem.NfiImpUFDesemb     = NfiImpUFDesemb
+       &SdtImpItem.NfiImpLocDesemb    = NfiImpLocDesemb
+       &SdtImpItem.NfiImpDtaDesemb    = NfiImpDtaDesemb
+       &SdtImpItem.NfiImpCNPJ         = NfiImpCNPJ
+       &SdtImpItem.NfiImpUFTer        = NfiImpUFTer
+       &SdtImpItem.NfiImpSeq          = NfiImpSeq
+       &SdtImpItem.NfiSeq             = NfiSeq
+       &SdtImp.Add(&SdtImpItem)
+   endfor
    
+   // Adições
+   for each
+     where NfsNum = &SdtNf.NfsNum
+     where NfsSer = &SdtNf.NfsSer
+     defined by NfiImpAdcSeq
+      
+       &SdtADIItem = new SdtAdi.SdtAdiItem()
+       &SdtADIItem.NfiImpAdcNro     = NfiImpAdcNro
+       &SdtADIItem.NfiImpAdcFab     = NfiImpAdcFab
+       &SdtADIItem.NfiImpAdcNroDraw = NfiImpAdcNroDraw
+       &SdtADIItem.NfiImpAdcVlrDesc = NfiImpAdcVlrDesc
+       &SdtADIItem.NfiImpAdcSeq     = NfiImpAdcSeq
+       &SdtADIItem.NfiSeq           = NfiSeq
+       &SdtADIItem.NfiImpSeq        = NfiImpSeq
+       &SdtADI.Add(&SdtADIItem)
+     
+   endfor
 
    for each
      where VenCod = &SdtNf.NfsVenCod
@@ -271,8 +311,8 @@ event start
 //       &NfsQtd    = &SdtNf.NfsQtd
    endif
 
-    If &Logon.EmpClienteNa12 = 11 or &Logon.EmpClienteNa12 = 18 //PlasBrink | PuffToys
-       &NfsEsp = 'CAIXAS'          
+    If &Logon.EmpClienteNa12 =11  //plasbrink
+       &NfsEsp = 'CAIXA'          
     endif
    
 endevent
@@ -423,12 +463,12 @@ endevent
 //EndEvent  // 'altpro'
 
 Event 'vispro'
-    call(WNotaItemDsp,&NfiSeq, &NfiPrdCod,&SdtNfPro, 'DSP')
+    WNotaItemDsp.call(&NfiSeq, &NfiPrdCod,&SdtNfPro,&SdtImp,&SdtADI, 'DSP')
 EndEvent  // 'vispro'
 
 
 Event 'AlterarProduto'
-    call(WNotaItemDsp,&NfiSeq, &NfiPrdCod,&SdtNfPro, 'UPD')
+    call(WNotaItemDsp,&NfiSeq, &NfiPrdCod,&SdtNfPro,&SdtImp,&SdtADI,'UPD')
 
     &NfsBseClcIcms = 0
     &nfsvlricms = 0
@@ -581,6 +621,8 @@ event GrdPrd.Load
 
 for &SdtNfProItem in &SdtNfPro
 
+    
+
     &NfiSeq = &SdtNfProItem.NfiSeq
     &NfiPrdCod = &SdtNfProItem.NfiPrdCod
     &NfiPrdDsc = &SdtNfProItem.NfiPrdDsc
@@ -598,7 +640,6 @@ for &SdtNfProItem in &SdtNfPro
     &NfiAlqIcms = &SdtNfProItem.NfiAlqIcms
     &NfiAlqIpi  = &SdtNfProItem.NfiAlqIpi
     &NfiOrdCompra = &SdtNfProItem.NfiOrdCompra
-    &NfiOrdCompraSeq = &SdtNfProItem.NfiOrdCompraSeq
 
     Load
 endfor
@@ -793,7 +834,7 @@ do case
         &SdtNfPar.Add(&SdtNfParItem)
     endfor
 
-     call(PGravaNota,&Logon,&SdtNf,&SdtNfPar,&SdtNfPro,&SdtNfChRef)
+     call(PGravaNota,&Logon,&SdtNf,&SdtNfPar,&SdtNfPro,&SdtNfChRef,&SdtImp,&SdtADI)
      &Gravou = 'S'
 
      return
