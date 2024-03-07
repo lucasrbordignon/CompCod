@@ -170,7 +170,8 @@ new
     NfsVlrFCPSub = &SdtNf.NfsVlrFCPSub
     NfsVlrIPIDev = &SdtNf.NfsVlrIPIDev
     NfsTipoNfRef = &SdtNf.NfsTipoNfRef
-
+    NfsVlrII = &SdtNf.NfsVlrII
+    NfsBseClcIcms = &SdtNf.NfsBseClcIcms
 endnew
 
 
@@ -305,8 +306,51 @@ for &SdtNfProItem in &SdtNfPro
         NfiVlrIcmsSubstituto = &SdtNfProItem.NfiVlrIcmsSubstituto
         NfiParcelaIcmsRetido = &SdtNfProItem.NfiParcelaIcmsRetido 
         NfiOrdCompra = &SdtNfProItem.NfiOrdCompra
-        NfiOrdCompraSeq = &SdtNfProItem.NfiOrdCompraSeq
+        NfiIVlrBCImp = &SdtNfProItem.NfiIVlrBCImp
+        NfiVlrDespAdu = &SdtNfProItem.NfiVlrDespAdu
+        NfiVlrIOF = &SdtNfProItem.NfiVlrIOF
+        NfiVlrII = &SdtNfProItem.NfiVlrII
     endnew
+
+    &Cont2 = 0
+    for &SdtImpItem in &SdtImp
+        if &SdtImpItem.NfiPrdCod = &SdtNfProItem.NfiPrdCod
+            new
+                NfsNum = &SdtNf.NfsNum
+                NfsSer = &SdtNf.NfsSer
+                NfiSeq = &SdtImpItem.NfiSeq
+                NfiImpSeq = &SdtImpItem.NfiImpSeq
+                NfiImpNroDI = &SdtImpItem.NfiImpNroDI
+                NfiImpDtaDI = &SdtImpItem.NfiImpDtaDI
+                NfiImpLocDesemb = &SdtImpItem.NfiImpLocDesemb
+                NfiImpUFDesemb = &SdtImpItem.NfiImpUFDesemb
+                NfiImpDtaDesemb = &SdtImpItem.NfiImpDtaDesemb
+                NfiImpcExportador = &SdtImpItem.NfiImpcExportador
+                NfiImpViaTransp = &SdtImpItem.NfiImpViaTransp
+                NfiImpVlrViaTransp = &SdtImpItem.NfiImpVlrViaTransp
+                NfiImpTpIntermedio = &SdtImpItem.NfiImpTpIntermedio
+                NfiImpCNPJ = &SdtImpItem.NfiImpCNPJ
+                NfiImpUFTer = &SdtImpItem.NfiImpUFTer
+                NfiImpVlrAFRMM = &SdtImpItem.NfiImpVlrAFRMM 
+            endnew
+
+            for &SdtADIItem in &SdtADI
+              if &SdtADIItem.NfiSeq = &SdtImpItem.NfiSeq and &SdtADIItem.NfiImpSeq = &SdtImpItem.NfiImpSeq  
+                new
+                  NfiSeq           = &SdtADIItem.NfiSeq
+                  NfiImpAdcSeq     = &SdtADIItem.NfiImpAdcSeq 
+                  NfiImpSeq        = &SdtADIItem.NfiImpSeq
+                  NfiImpAdcFab     = &SdtADIItem.NfiImpAdcFab
+                  NfiImpAdcNro     = &SdtADIItem.NfiImpAdcNro
+                  NfiImpAdcNroDraw = &SdtADIItem.NfiImpAdcNroDraw
+                  NfiImpAdcVlrDesc = &SdtADIItem.NfiImpAdcVlrDesc
+                endnew
+      
+              endif
+            endfor
+
+        endif
+    endfor
 
     If &PedTipTrnEstoqueTerceiro = 1 // Movimenta estoque de terceiro
         Do 'BuscaTerceiro'
