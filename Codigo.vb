@@ -77,9 +77,6 @@ Sub 'CalcDVNossoNr' // BASE 11
       &Soma          += &ValorLinha * &Multiplicador
   Endfor
 
-//  &ValorDiv = int(&Soma / 11)
-//  
-//  &intResto = &Soma - (Int(&ValorDiv) * 11)
 
   &intResto = mod(&Soma,11)
 
@@ -91,5 +88,23 @@ Sub 'CalcDVNossoNr' // BASE 11
      &DigNr = 11 - &intResto
      &DVNossoNr = str(&DigNr)
   endif
+
+
+//&ValorDiv = Int((&Soma/11))
+//&intResto = &Soma - (Int(&ValorDiv) * 11)
+//
+// Do Case
+//    Case &intResto = 0
+//        &DVNossoNr = '0'
+//    Case &intResto = 1
+//        &DVNossoNr = '0'
+//    Otherwise
+//
+//         &DigNr = 11 - &intResto
+//         &DVNossoNr = str(&DigNr)
+//
+// EndCase
+
+
 
 EndSub
