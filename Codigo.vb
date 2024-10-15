@@ -24,7 +24,6 @@ for each
         &EmpTpMovStqCcr = EmpTpMovStqCcr
         &EmpDescIcmsBcPisCofins = EmpDescIcmsBcPisCofins
         &EmpRoundNF = EmpRoundNF
-        &EmpNfsEsp = EmpNfsEsp
 endfor
 
 &serie = padl(trim(&EmpSerie),3,'0')
@@ -241,8 +240,6 @@ for each PedCod
     &PedTipTrn = PedTipTrn
     &SdtNf.NfsFormCod = PedFormPgt
 
-    &SdtNf.NfsEsp = &EmpNfsEsp
-
     &SdtNf.MovCcr = &PedMovCcr
     &SdtNf.MovStq = &PedMovStq
 
@@ -295,22 +292,19 @@ for each PedCod
               
               &PdiQtd2 = &SdtPdi.PdiQtd
     
-              if &isMov = 0
-                If &EmpTpMovStqCcr = 'P' // Controla Movimento de Estoque e Contas a Receber pelo Pedido
-                    If &PedTipTrnContEst = 1 and &PedMovStq = 1
-                       Call(PVerificaEst, &Logon,&PdiPrdCod,&PdiQtd2)                  
-                    endif
-                Else
-                   If &PedTipTrnContEst = 1 and &SdtPdi.PdiCfopMovStq = 'S'      
-                      Call(PVerificaEst, &Logon,&PdiPrdCod,&PdiQtd2)              
-                   endif
-                EndIf
-
-                    
-                if &PdiQtd2 = 0
-                   Msg('Operação não pode ser realizada')
-                   return
-                endif  
+              If &EmpTpMovStqCcr = 'P' // Controla Movimento de Estoque e Contas a Receber pelo Pedido
+                  If &PedTipTrnContEst = 1 and &PedMovStq = 1
+                     Call(PVerificaEst, &Logon,&PdiPrdCod,&PdiQtd2)                  
+                  endif
+              Else
+                 If &PedTipTrnContEst = 1 and &SdtPdi.PdiCfopMovStq = 'S'      
+                    Call(PVerificaEst, &Logon,&PdiPrdCod,&PdiQtd2)              
+                 endif
+              EndIf
+    
+              if &PdiQtd2 = 0
+                 Msg('Operação não pode ser realizada')
+                 return
               endif
     
            endif
@@ -502,25 +496,23 @@ for each PedCod
 
            &SdtNf.NfsVlrTotNf += &SdtNfProItem.NfiVlrTot 
 
-           if &isMov = 0
-             If &EmpTpMovStqCcr = 'C' // Só irá somar os produto no total das parcelas se a transação estiver marcada para movimentar contas a receber
-                  If &SdtPdi.PdiCfopMovFin = 'S'
-  
-                    If &CondRatIPI = 0
-                    	&NfsTotPar += &SdtNfProItem.NfiVlrTot
-                    Else
-                      &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
-                   	EndIf
-  
-                  EndIf
-             Else
-              	If &CondRatIPI = 0
-                  &NfsTotPar += &SdtNfProItem.NfiVlrTot
-                Else
-                  &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
+           If &EmpTpMovStqCcr = 'C' // Só irá somar os produto no total das parcelas se a transação estiver marcada para movimentar contas a receber
+                If &SdtPdi.PdiCfopMovFin = 'S'
+
+                  If &CondRatIPI = 0
+                  	&NfsTotPar += &SdtNfProItem.NfiVlrTot
+                  Else
+                    &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
+                 	EndIf
+
                 EndIf
-             EndIf                    
-           endif
+           Else
+            	If &CondRatIPI = 0
+                &NfsTotPar += &SdtNfProItem.NfiVlrTot
+              Else
+                &NfsTotPar += &SdtNfProItem.NfiVlrTot - &SdtNfProItem.NfiVlrIpi // Tira o Valor do IPI para depois colocar na primeira parcela
+              EndIf
+           EndIf                    
 
            &SdtNf.NfsBseClcIcms += &SdtNfProItem.NfiBseClcIcms
            &SdtNf.NfsBseClcSt += &SdtNfProItem.NfiBseClcSt
@@ -609,7 +601,7 @@ for each PedCod
   
     do'obs'    
 
-if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &NfsTotPar > 0 and &isMov = 0
+if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &NfsTotPar > 0
 
           &SdtNfPar.Clear()
 
@@ -668,27 +660,11 @@ if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &NfsTotPar > 0 and &isMov = 0
 
 endfor
 
-csharp string dirAtual = System.Windows.Forms.Application.StartupPath;
-csharp [!&diretorio!] = dirAtual;
-
-&diretorio += '\PrePedido'
-&diretorio = strreplace(&diretorio,'\','\\')
-
-csharp string dir4 = @[!&diretorio!];
-csharp if (!System.IO.Directory.Exists(dir4))
-csharp {
-                       
-        csharp   System.IO.Directory.CreateDirectory(dir4);
-                      
-csharp }
-
 do case
   case &ModoImp = 'P1'
-     &arquivo = &diretorio + '\Conferencia' +trim(str(&PedCod))+'.pdf'
-     RRelPrePedConf.Call(&Logon, &SdtNf, &SdtNfPar, &SdtNfPro, &arquivo)
+     RRelPrePedConf.Call(&Logon, &SdtNf, &SdtNfPar, &SdtNfPro)
   case &ModoImp = 'P2'
-     &arquivo = &diretorio + '\Cliente' +trim(str(&PedCod))+'.pdf'
-     RRelPrePedCli.Call(&Logon, &SdtNf, &SdtNfPar, &SdtNfPro,&arquivo)
+     RRelPrePedCli.Call(&Logon, &SdtNf, &SdtNfPar, &SdtNfPro)
   case &ModoImp = 'N'
 
       &Flag = 'N'
@@ -750,15 +726,17 @@ do case
                 Defined by NfsVlrTotPrd
               
                     If  NfsNumPed = &PedCod
-                      &NfsVlrTotPrd = NfsVlrTotPrd + NfsVlrDsc - NfsAcrescimos - NfsVlrFrt
+                      &NfsVlrTotPrd = NfsVlrTotPrd - NfsVlrDsc + NfsAcrescimos + NfsVlrFrt
                     EndIf
               
               EndFor
               
               //TIRA O VALOR DA MERCADORIA DA NOTA FISCAL 
-              &TotalParcelas = &TotalParcelas - &NfsVlrTotPrd        
+              &TotalParcelas = &TotalParcelas - &NfsVlrTotPrd
               //NOVO
-          
+
+
+
                 // MOVIMENTA ESTOQUE 
                 for &SdtPdi in &ColSdtPdi
                     if &SdtPdi.Seq = 2
@@ -767,7 +745,7 @@ do case
                        &PdiQtd    = &SdtPdi.PdiQtd
                        &PdiVlrUnt = &SdtPdi.PdiVlrUnt
       
-                       if (&PedMovStq = 1 or (&SdtPdi.PdiCfopMovStq = 'S' and &EmpTpMovStqCcr = 'C') ) and &CreTp = 'Q' and &isMov = 0 // Controla Movimento de Estoque e Contas a Receber pelo Pedido ou CFOP
+                       if (&PedMovStq = 1 or (&SdtPdi.PdiCfopMovStq = 'S' and &EmpTpMovStqCcr = 'C') ) and &CreTp = 'Q' // Controla Movimento de Estoque e Contas a Receber pelo Pedido ou CFOP
       
                            &obs       = 'FATURAMENTO REFERENTE AO PEDIDO NUMERO '+Trim(str(&PedCod))
                            
@@ -784,7 +762,7 @@ do case
                     endif
                 endfor
       
-                if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &TotalParcelas > 0 and &isMov = 0
+                if (&PedMovCcr = 1 or &EmpTpMovStqCcr = 'C') and &TotalParcelas > 0
       
                    if &EmpCalcParc = 1
                          do 'buscaparc2'
@@ -3776,14 +3754,14 @@ EndFor
 EndSub
 
 
-//sub'verlote'
-//  &flag3 = 'N'
-//   for each
-//       where PedCod = &pedcod
-//       where PdiPrdCod = &pdiprdCod
-//
-//       &PdiQtd3 += PedLotePrdQtd
-//       &flag3 = 'S'
-//
-//   endfor
-//endsub
+sub'verlote'
+  &flag3 = 'N'
+   for each
+       where PedCod = &pedcod
+       where PdiPrdCod = &pdiprdCod
+
+       &PdiQtd3 += PedLotePrdQtd
+       &flag3 = 'S'
+
+   endfor
+endsub
