@@ -17,7 +17,7 @@ Event 'nfe'
                                     WVlrM3Frt.Call(&Logon,PedCod)
                                 EndIf
 
-                                Call(PGeraNota, &Logon,PedCod,'N',0)
+                                Call(PGeraNota, &Logon,PedCod,'N')
 
                                 If &Logon.EmpClienteNa12 = 13 and PedTipTrnNOP = 3 // Se for JCK e Devolução de Venda
                                     Call(PVerStsPed, &Logon, PedCod, &PedSts2)
@@ -49,27 +49,7 @@ Event 'nfe'
                 msg('Valor do Pedido não pode ser zero')
             endif
         else
-            if &PedSts2 = 2
-              confirm('Deseja Gerar a Nota Fiscal ?')
-              if confirmed()
-      
-                 &Flag = 'N'
-                 &PedCod3 = PedCod
-                 do'locped'
-                 if &Flag = 'N'
-              
-                    Call(PGeraNota, &Logon,PedCod,'S',1)
-      
-                 else
-      
-                    msg('Já existe uma Nota Fiscal para este pedido')
-      
-                 endif
-      
-              endif
-            else
-              msg('Situação do Pedido não permite esta operação')
-            endif
+            msg('Situação do Pedido não permite esta operação')
         endif
     else
         msg('Favor selecionar um pedido!')
